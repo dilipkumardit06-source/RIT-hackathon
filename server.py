@@ -128,10 +128,10 @@ def get_bedrock_client(region="eu-north-1"):
     if not BOTO3_AVAILABLE:
         return None
     try:
-        # Check standard env vars or default credentials
+        reg = os.environ.get('AWS_REGION') or os.environ.get('AWS_DEFAULT_REGION') or region
         client = boto3.client(
             service_name='bedrock-runtime',
-            region_name=os.environ.get('AWS_REGION', region)
+            region_name=reg
         )
         return client
     except Exception as e:
@@ -142,37 +142,58 @@ def get_bedrock_client(region="eu-north-1"):
 def call_bedrock_converse(client, model_id, system_prompt, user_message):
     """
     Invokes AWS Bedrock Converse API with Guardrails.
+    Supports Claude Opus 5, Claude 3.5 Sonnet, Nova, and Bedrock models.
     """
     try:
         # Map user friendly model names to AWS Bedrock model IDs
         model_map = {
-            "claude-3-5-sonnet": "anthropic.claude-3-5-sonnet-20241022-v2:0",
-            "claude-3-sonnet": "anthropic.claude-3-sonnet-20240229-v1:0",
-            "claude-3-haiku": "anthropic.claude-3-haiku-20240307-v1:0",
-            "amazon-nova": "amazon.nova-pro-v1:0",
-            "amazon-nova-lite": "amazon.nova-lite-v1:0"
+            "claude-opus-5": "eu.anthropic.claude-opus-5",
+            "claude-3-5-sonnet": "eu.anthropic.claude-sonnet-4-20250514-v1:0",
+            "claude-3-sonnet": "eu.anthropic.claude-sonnet-4-20250514-v1:0",
+            "claude-3-haiku": "eu.anthropic.claude-haiku-4-5-20251001-v1:0",
+            "amazon-nova": "eu.amazon.nova-pro-v1:0",
+            "amazon-nova-lite": "eu.amazon.nova-lite-v1:0"
         }
         actual_model_id = model_map.get(model_id, model_id)
 
-        response = client.converse(
-            modelId=actual_model_id,
-            system=[{"text": system_prompt}],
-            messages=[
-                {
-                    "role": "user",
-                    "content": [{"text": user_message}]
+        try:
+            response = client.converse(
+                modelId=actual_model_id,
+                system=[{"text": system_prompt}],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [{"text": user_message}]
+                    }
+                ],
+                inferenceConfig={
+                    "temperature": 0.2, # Low temperature for financial rigor
+                    "maxTokens": 1800,
+                    "topP": 0.9
                 }
-            ],
-            inferenceConfig={
-                "temperature": 0.2, # Low temperature for financial rigor
-                "maxTokens": 1800,
-                "topP": 0.9
-            }
-        )
+            )
 
-        content_list = response.get('output', {}).get('message', {}).get('content', [])
-        if content_list and 'text' in content_list[0]:
-            return content_list[0]['text'], actual_model_id
+            content_list = response.get('output', {}).get('message', {}).get('content', [])
+            if content_list and 'text' in content_list[0]:
+                return content_list[0]['text'], actual_model_id
+        except Exception as conv_err:
+            # Fallback check: try without region prefix
+            stripped_id = actual_model_id.replace("eu.", "").replace("global.", "")
+            if stripped_id != actual_model_id:
+                try:
+                    response = client.converse(
+                        modelId=stripped_id,
+                        system=[{"text": system_prompt}],
+                        messages=[{"role": "user", "content": [{"text": user_message}]}],
+                        inferenceConfig={"temperature": 0.2, "maxTokens": 1800, "topP": 0.9}
+                    )
+                    content_list = response.get('output', {}).get('message', {}).get('content', [])
+                    if content_list and 'text' in content_list[0]:
+                        return content_list[0]['text'], stripped_id
+                except Exception:
+                    pass
+            raise conv_err
+
         return None, actual_model_id
     except Exception as e:
         print(f"[Bedrock Converse Error] {type(e).__name__}: {e}")
