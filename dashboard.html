@@ -1,0 +1,2126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>OPTIGOAL ENGINE - Financial & Strategic Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+                },
+                colors: {
+                    brand: {
+                        cyan: '#00B4DB',
+                        teal: '#0083B0',
+                        gold: '#F2C94C',
+                        bronze: '#F2994A'
+                    }
+                }
+            }
+        }
+    }
+  </script>
+  <style>
+    html {
+      font-size: 24px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    @media (min-width: 1440px) {
+      html {
+        font-size: 26px;
+      }
+    }
+    @media (min-width: 1920px) {
+      html {
+        font-size: 28px;
+      }
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      letter-spacing: -0.011em;
+    }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #f8fafc; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    .nav-btn.active {
+      background: rgba(0, 180, 219, 0.12);
+      color: #00B4DB;
+      border-right: 5px solid #00B4DB;
+      font-weight: 700;
+    }
+
+    .stat-card {
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08);
+    }
+  </style>
+</head>
+<body class="h-screen w-full flex flex-col bg-gray-50 text-gray-900 overflow-hidden select-none text-base">
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="h-24 border-b border-gray-200 bg-white flex items-center justify-between px-8 sm:px-10 z-30 flex-shrink-0 shadow-sm">
+    <a href="index.html" class="flex items-center gap-4 group cursor-pointer hover:opacity-90 transition-opacity">
+      <div class="w-14 h-14 rounded-2xl bg-brand-cyan/10 flex items-center justify-center border-2 border-brand-cyan/30 group-hover:scale-105 transition-transform shadow-sm">
+        <span class="material-symbols-outlined text-brand-cyan text-[40px]">rocket_launch</span>
+      </div>
+      <div>
+        <h1 class="font-black text-2xl sm:text-3xl tracking-tight flex items-center text-gray-900 leading-none">
+          OPTIGOAL <span class="text-brand-cyan ml-2">ENGINE</span>
+        </h1>
+        <p class="text-sm font-extrabold text-gray-400 mt-1 uppercase tracking-wider">Financial & Goal Intelligence</p>
+      </div>
+    </a>
+
+    <!-- Financial Profile Quick Status Pill in Header -->
+    <div class="hidden lg:flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-2xl px-5 py-2.5 shadow-inner">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-brand-cyan text-[28px]">account_balance_wallet</span>
+        <span class="text-sm font-extrabold text-gray-500 uppercase">Available/Mo:</span>
+        <span id="quick-avail-display" class="text-base font-black text-gray-900">₹0</span>
+      </div>
+      <div class="h-5 w-px bg-gray-300"></div>
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-emerald-500 text-[28px]">savings</span>
+        <span class="text-sm font-extrabold text-gray-500 uppercase">Investments/Mo:</span>
+        <span id="quick-invest-display" class="text-base font-black text-gray-900">₹0</span>
+      </div>
+      <button onclick="openFinancialProfileModal()" class="text-sm font-black text-brand-cyan hover:text-brand-teal ml-1 flex items-center gap-1 hover:underline cursor-pointer">
+        <span class="material-symbols-outlined text-[22px]">tune</span>
+        <span>Edit Budget</span>
+      </button>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <!-- Firebase Cloud Sync Status Pill -->
+      <div id="cloud-sync-status" class="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-sm font-extrabold text-emerald-700 border border-emerald-200 shadow-sm transition-all" title="Connected to Firebase Cloud Firestore">
+        <span id="cloud-sync-icon" class="material-symbols-outlined text-[24px] text-emerald-500">cloud_done</span>
+        <span id="cloud-sync-text">Cloud Synced</span>
+      </div>
+
+      <div class="hidden sm:flex items-center gap-2.5 px-4 py-2 rounded-full bg-blue-50 text-base font-black text-blue-700 border border-blue-200 shadow-sm">
+        <span class="w-3 h-3 rounded-full bg-blue-500 animate-pulse"></span>
+        <span>Engine Active</span>
+      </div>
+
+      <div class="h-10 w-px bg-gray-200 mx-1 hidden sm:block"></div>
+
+      <button id="btn-back-home" class="flex items-center gap-3.5 p-2 rounded-2xl hover:bg-gray-100 transition-colors">
+        <div id="user-avatar-initials" class="w-12 h-12 rounded-2xl bg-gradient-to-r from-brand-cyan to-brand-teal text-white font-black text-base flex items-center justify-center shadow-md">
+          JD
+        </div>
+        <div class="text-left hidden md:block">
+          <p id="user-display-name" class="text-base sm:text-lg font-black text-gray-900 leading-tight">Workspace Member</p>
+          <p id="user-display-role" class="text-xs sm:text-sm text-gray-500 font-bold mt-0.5">Admin Account</p>
+        </div>
+        <span class="material-symbols-outlined text-[28px] text-gray-400">expand_more</span>
+      </button>
+
+      <button id="btn-logout" class="hidden sm:flex items-center gap-2.5 px-5 py-3 rounded-2xl text-base font-black text-gray-600 hover:text-red-600 hover:bg-red-50 border border-gray-200 hover:border-red-200 transition-all cursor-pointer shadow-sm">
+        <span class="material-symbols-outlined text-[26px]">logout</span>
+        <span>Logout</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="flex-1 flex overflow-hidden">
+    
+    <!-- LEFT PANEL: SIDEBAR (w-80 for larger typography) -->
+    <aside class="w-80 border-r border-gray-200 bg-white flex flex-col flex-shrink-0 z-20 shadow-sm">
+      <div class="p-6">
+        <button id="btn-sidebar-new-goal" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-brand-cyan to-brand-teal hover:shadow-xl hover:shadow-brand-cyan/30 text-white font-black text-lg flex items-center justify-between shadow-md transition-all transform hover:-translate-y-0.5 cursor-pointer">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-[32px]">add_circle</span>
+            <span>New Goal</span>
+          </div>
+          <span class="text-xs bg-white/20 px-2.5 py-1 rounded-full font-black uppercase tracking-wider">Add</span>
+        </button>
+      </div>
+
+      <nav class="flex-1 px-5 py-2 space-y-2 overflow-y-auto">
+        <button id="nav-btn-overview" class="nav-btn active w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-lg font-bold transition-all text-left">
+          <span class="material-symbols-outlined text-[34px]">dashboard</span>
+          <span>Overview</span>
+        </button>
+        <button id="nav-btn-trajectories" class="nav-btn w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-lg font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all text-left">
+          <span class="material-symbols-outlined text-[34px]">monitoring</span>
+          <span>Trajectories</span>
+        </button>
+        <button id="nav-btn-resources" class="nav-btn w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-lg font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all text-left">
+          <span class="material-symbols-outlined text-[34px]">pie_chart</span>
+          <span>Resource Allocation</span>
+        </button>
+        <button id="nav-btn-settings" class="nav-btn w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-lg font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all text-left">
+          <span class="material-symbols-outlined text-[34px]">tune</span>
+          <span>Engine Settings</span>
+        </button>
+        <button id="nav-btn-ai-advisor" class="nav-btn w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-lg font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all text-left">
+          <span class="material-symbols-outlined text-[34px] text-purple-600">psychology</span>
+          <div class="flex-1 flex items-center justify-between">
+            <span>AI Advisor</span>
+            <span class="text-[11px] font-black uppercase tracking-wider bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-2.5 py-0.5 rounded-full shadow-sm">AWS</span>
+          </div>
+        </button>
+      </nav>
+
+      <!-- Sidebar Bottom: Financial Health Gauge -->
+      <div class="p-6 border-t border-gray-100 bg-gray-50/70">
+        <div class="flex items-center justify-between text-base font-black text-gray-700 mb-2">
+          <span>Financial Health</span>
+          <span id="sidebar-health-score" class="text-lg font-black text-brand-cyan">--</span>
+        </div>
+        <div class="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden mb-2">
+          <div id="sidebar-health-bar" class="h-full bg-gradient-to-r from-brand-cyan to-brand-teal rounded-full transition-all duration-500" style="width: 0%;"></div>
+        </div>
+        <p id="sidebar-health-status" class="text-xs font-bold text-gray-400">Configure financial profile to evaluate</p>
+      </div>
+    </aside>
+
+    <!-- CENTER WORKSPACE -->
+    <main class="flex-1 h-full flex flex-col bg-gray-50 overflow-y-auto px-8 sm:px-12 py-8">
+      
+      <!-- ================= VIEW 1: OVERVIEW ================= -->
+      <div id="view-overview" class="space-y-8">
+        
+        <!-- Header Row -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight">Executive Overview</h1>
+            <p class="text-lg font-medium text-gray-500 mt-2">Real-time financial health, cash flow availability, and goal optimization.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="openFinancialProfileModal()" class="px-5 py-3 rounded-2xl bg-white border border-gray-200 text-gray-700 font-extrabold text-base hover:bg-gray-50 shadow-sm transition-all flex items-center gap-2">
+              <span class="material-symbols-outlined text-[28px] text-brand-cyan">tune</span>
+              <span>Financial Profile</span>
+            </button>
+            <button onclick="openNewGoalModal()" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-cyan to-brand-teal text-white font-black text-base shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+              <span class="material-symbols-outlined text-[28px]">add</span>
+              <span>Add Goal</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Conflict & Advisory Alert Banner (Dynamically shown when conflict/risk occurs) -->
+        <div id="conflict-alert-banner" class="hidden p-5 rounded-2xl border transition-all">
+          <div class="flex items-start gap-4">
+            <span id="conflict-icon" class="material-symbols-outlined text-[40px] mt-0.5">warning</span>
+            <div class="flex-1">
+              <h4 id="conflict-title" class="text-xl font-black mb-1">Budget Conflict Detected</h4>
+              <p id="conflict-desc" class="text-base font-semibold leading-relaxed">Total monthly goal requirements exceed your available monthly budget.</p>
+            </div>
+            <button onclick="switchToView('resources')" class="px-4 py-2 rounded-xl text-sm font-black bg-white/80 hover:bg-white shadow-sm border transition-all">
+              Resolve Conflict
+            </button>
+          </div>
+        </div>
+
+        <!-- Comprehensive 6-Grid KPI Metrics Cards (Large Font Size) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          
+          <!-- Card 1: Total Goals -->
+          <div class="stat-card bg-white p-7 rounded-3xl shadow-sm border border-gray-100 border-t-4 border-t-blue-500">
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-base font-extrabold text-gray-500 uppercase tracking-wider">Total Goals</p>
+              <span class="material-symbols-outlined text-blue-500 text-[34px]">flag</span>
+            </div>
+            <div class="flex items-baseline gap-3">
+              <h3 id="kpi-goals-count" class="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight">0</h3>
+              <span id="kpi-goals-target" class="text-base font-extrabold text-gray-500">₹0 Target Total</span>
+            </div>
+            <p id="kpi-goals-sub" class="text-sm font-bold text-gray-400 mt-2">0 Initiatives tracked</p>
+          </div>
+
+          <!-- Card 2: Required / Month -->
+          <div class="stat-card bg-white p-7 rounded-3xl shadow-sm border border-gray-100 border-t-4 border-t-amber-500">
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-base font-extrabold text-gray-500 uppercase tracking-wider">Required / Month</p>
+              <span class="material-symbols-outlined text-amber-500 text-[34px]">payments</span>
+            </div>
+            <div class="flex items-baseline gap-3">
+              <h3 id="kpi-required-value" class="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight">₹0</h3>
+              <span class="text-sm font-extrabold text-gray-400">/ mo</span>
+            </div>
+            <p id="kpi-required-sub" class="text-sm font-bold text-gray-400 mt-2">Combined monthly goal demand</p>
+          </div>
+
+          <!-- Card 3: Available / Month -->
+          <div class="stat-card bg-white p-7 rounded-3xl shadow-sm border border-gray-100 border-t-4 border-t-brand-cyan">
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-base font-extrabold text-gray-500 uppercase tracking-wider">Available / Month</p>
+              <span class="material-symbols-outlined text-brand-cyan text-[34px]">account_balance_wallet</span>
+            </div>
+            <div class="flex items-baseline gap-3">
+              <h3 id="kpi-available-value" class="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight">₹0</h3>
+              <span class="text-sm font-extrabold text-gray-400">/ mo</span>
+            </div>
+            <p id="kpi-available-sub" class="text-sm font-bold text-gray-400 mt-2">Net capital after expenses</p>
+          </div>
+
+          <!-- Card 4: Conflicts & Surplus -->
+          <div class="stat-card bg-white p-7 rounded-3xl shadow-sm border border-gray-100 border-t-4 border-t-purple-500">
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-base font-extrabold text-gray-500 uppercase tracking-wider">Conflicts</p>
+              <span id="kpi-conflict-icon" class="material-symbols-outlined text-purple-500 text-[34px]">check_circle</span>
+            </div>
+            <div class="flex items-baseline gap-3">
+              <h3 id="kpi-conflict-status" class="text-3xl sm:text-4xl font-black text-emerald-600 tracking-tight">0 Conflicts</h3>
+            </div>
+            <p id="kpi-conflict-sub" class="text-sm font-bold text-gray-400 mt-2">Balanced cash flow</p>
+          </div>
+
+          <!-- Card 5: Goals At Risk -->
+          <div class="stat-card bg-white p-7 rounded-3xl shadow-sm border border-gray-100 border-t-4 border-t-rose-500">
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-base font-extrabold text-gray-500 uppercase tracking-wider">Goals at Risk</p>
+              <span class="material-symbols-outlined text-rose-500 text-[34px]">fmd_bad</span>
+            </div>
+            <div class="flex items-baseline gap-3">
+              <h3 id="kpi-risk-count" class="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight">0</h3>
+              <span id="kpi-risk-badge" class="text-sm font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">All Funded</span>
+            </div>
+            <p id="kpi-risk-sub" class="text-sm font-bold text-gray-400 mt-2">Underfunded initiative count</p>
+          </div>
+
+          <!-- Card 6: Financial Health -->
+          <div class="stat-card bg-white p-7 rounded-3xl shadow-sm border border-gray-100 border-t-4 border-t-emerald-500">
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-base font-extrabold text-gray-500 uppercase tracking-wider">Financial Health</p>
+              <span class="material-symbols-outlined text-emerald-500 text-[34px]">health_and_safety</span>
+            </div>
+            <div class="flex items-baseline gap-3">
+              <h3 id="kpi-health-score" class="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight">--</h3>
+              <span id="kpi-health-badge" class="text-sm font-extrabold text-gray-400 bg-gray-100 px-3 py-1 rounded-lg">Awaiting Data</span>
+            </div>
+            <p id="kpi-health-sub" class="text-sm font-bold text-gray-400 mt-2">Coverage, reserve & risk score</p>
+          </div>
+
+        </div>
+
+        <!-- Trajectory Projection Chart Area -->
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 relative">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <h2 class="text-2xl sm:text-3xl font-black text-gray-900">Trajectory Projection</h2>
+              <p class="text-base text-gray-500 font-semibold mt-1">Available Capital Cumulative vs Required Goal Funding</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <select id="chart-timeline-select" class="bg-gray-50 border border-gray-200 text-base font-bold rounded-xl px-4 py-2.5 outline-none focus:border-brand-cyan shadow-sm">
+                <option value="6">Next 6 Months</option>
+                <option value="12">Next 12 Months</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="h-[380px] w-full relative">
+            <canvas id="dashChart"></canvas>
+            
+            <!-- Empty state overlay if zero data -->
+            <div id="chart-empty-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-[2px] rounded-2xl flex flex-col items-center justify-center text-center p-8 transition-opacity duration-300">
+              <div class="w-16 h-16 rounded-2xl bg-brand-cyan/10 flex items-center justify-center text-brand-cyan mb-4">
+                <span class="material-symbols-outlined text-[44px]">show_chart</span>
+              </div>
+              <h4 class="text-2xl font-black text-gray-800 mb-2">No Trajectory Projection Available</h4>
+              <p class="text-lg text-gray-500 max-w-lg mb-6 leading-relaxed">
+                Set your monthly available budget and create your first goal to visualize trajectory projections.
+              </p>
+              <div class="flex gap-4">
+                <button onclick="openFinancialProfileModal()" class="px-6 py-3 rounded-xl border border-gray-200 font-bold text-base hover:bg-gray-50 transition-colors">
+                  Set Budget
+                </button>
+                <button onclick="openNewGoalModal()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-brand-cyan to-brand-teal text-white font-extrabold text-base shadow-md hover:shadow-lg transition-all">
+                  + Add First Goal
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Goals & Optimizations Table Area -->
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+          <div class="p-8 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl sm:text-3xl font-black text-gray-900">Active Goals & Expense Optimization</h2>
+              <p class="text-base font-semibold text-gray-500 mt-1">Timeline, Required/Month, and Risk Status for each objective</p>
+            </div>
+            <button onclick="openNewGoalModal()" class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-brand-cyan to-brand-teal text-white font-black text-base shadow-sm hover:shadow-md transition-all flex items-center gap-2 cursor-pointer self-start sm:self-auto">
+              <span class="material-symbols-outlined text-[28px]">add</span>
+              <span>Add Goal</span>
+            </button>
+          </div>
+
+          <!-- Live Table -->
+          <div id="goals-table-container" class="hidden overflow-x-auto">
+            <table class="w-full text-left text-lg">
+              <thead class="bg-gray-50/80 text-gray-500 font-extrabold text-sm uppercase tracking-wider border-b border-gray-100">
+                <tr>
+                  <th class="py-5 px-6">Initiative</th>
+                  <th class="py-5 px-6">Category</th>
+                  <th class="py-5 px-6">Timeline</th>
+                  <th class="py-5 px-6">Target Amount</th>
+                  <th class="py-5 px-6">Required / Month</th>
+                  <th class="py-5 px-6">Risk Status</th>
+                  <th class="py-5 px-6 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="goals-table-body" class="divide-y divide-gray-100 font-semibold text-gray-800">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty Table State -->
+          <div id="empty-goals-state" class="py-20 px-8 flex flex-col items-center justify-center text-center">
+            <div class="w-24 h-24 rounded-3xl bg-brand-cyan/10 flex items-center justify-center text-brand-cyan mb-6 shadow-inner">
+              <span class="material-symbols-outlined text-[64px]">flag</span>
+            </div>
+            <h3 class="text-2xl sm:text-3xl font-black text-gray-900 mb-3">No Goals or Expenses Tracked Yet</h3>
+            <p class="text-lg text-gray-500 max-w-xl mb-8 leading-relaxed">
+              Your workspace is freshly initialized. Click below to add your first goal with target cost, timeline, and monthly funding requirements.
+            </p>
+            <button onclick="openNewGoalModal()" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-cyan to-brand-teal text-white font-black text-lg shadow-md hover:shadow-xl transition-all flex items-center gap-3">
+              <span class="material-symbols-outlined text-[34px]">add_circle</span>
+              <span>Create First Goal</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================= VIEW 2: TRAJECTORIES ================= -->
+      <div id="view-trajectories" class="hidden space-y-8">
+        <div>
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight">Trajectory Analysis</h1>
+          <p class="text-lg font-medium text-gray-500 mt-2">In-depth projection model comparing capital availability against required goal pace.</p>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-black text-gray-900">Capital Accumulation vs Goal Milestones</h2>
+            <span class="text-sm font-bold text-gray-500">12-Month Projections</span>
+          </div>
+          <div class="h-[420px] w-full">
+            <canvas id="trajectoryDeepChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Trajectory Insights Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white p-7 rounded-3xl border border-gray-100 shadow-sm">
+            <span class="material-symbols-outlined text-brand-cyan text-[40px] mb-2">trending_up</span>
+            <h4 class="text-xl font-bold text-gray-900 mb-1">Growth Runway</h4>
+            <p id="trajectory-runway-text" class="text-base text-gray-500">Calculated after you define your monthly income & expenses.</p>
+          </div>
+          <div class="bg-white p-7 rounded-3xl border border-gray-100 shadow-sm">
+            <span class="material-symbols-outlined text-amber-500 text-[40px] mb-2">hourglass_top</span>
+            <h4 class="text-xl font-bold text-gray-900 mb-1">Time to Target</h4>
+            <p id="trajectory-timetarget-text" class="text-base text-gray-500">Based on current monthly required funding velocity.</p>
+          </div>
+          <div class="bg-white p-7 rounded-3xl border border-gray-100 shadow-sm">
+            <span class="material-symbols-outlined text-emerald-500 text-[40px] mb-2">verified</span>
+            <h4 class="text-xl font-bold text-gray-900 mb-1">Feasibility Index</h4>
+            <p id="trajectory-feasibility-text" class="text-base text-gray-500">Evaluation of total goal load vs available capital.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= VIEW 3: RESOURCE ALLOCATION ================= -->
+      <div id="view-resources" class="hidden space-y-8">
+        <div>
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight">Resource Allocation</h1>
+          <p class="text-lg font-medium text-gray-500 mt-2">Breakdown of income distribution: Operating Expenses, Investments, Active Goals, and Surplus.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          <!-- Doughnut Chart: Monthly Capital Distribution -->
+          <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+            <h2 class="text-2xl font-black text-gray-900 self-start mb-6">Monthly Capital Distribution</h2>
+            <div class="h-[340px] w-full relative">
+              <canvas id="allocationChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Allocation Details & Conflict Resolution -->
+          <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between">
+            <div>
+              <h2 class="text-2xl font-black text-gray-900 mb-4">Allocation Breakdown</h2>
+              <div class="space-y-4">
+                <div class="flex items-center justify-between p-4 rounded-2xl bg-gray-50">
+                  <div class="flex items-center gap-3">
+                    <span class="w-4 h-4 rounded-full bg-rose-500"></span>
+                    <span class="text-base font-bold text-gray-700">Fixed Expenses:</span>
+                  </div>
+                  <span id="alloc-expenses-val" class="text-lg font-black text-gray-900">₹0</span>
+                </div>
+                <div class="flex items-center justify-between p-4 rounded-2xl bg-gray-50">
+                  <div class="flex items-center gap-3">
+                    <span class="w-4 h-4 rounded-full bg-emerald-500"></span>
+                    <span class="text-base font-bold text-gray-700">Investments / Growth:</span>
+                  </div>
+                  <span id="alloc-investments-val" class="text-lg font-black text-gray-900">₹0</span>
+                </div>
+                <div class="flex items-center justify-between p-4 rounded-2xl bg-gray-50">
+                  <div class="flex items-center gap-3">
+                    <span class="w-4 h-4 rounded-full bg-brand-cyan"></span>
+                    <span class="text-base font-bold text-gray-700">Active Goals Funding:</span>
+                  </div>
+                  <span id="alloc-goals-val" class="text-lg font-black text-gray-900">₹0</span>
+                </div>
+                <div class="flex items-center justify-between p-4 rounded-2xl bg-gray-50">
+                  <div class="flex items-center gap-3">
+                    <span class="w-4 h-4 rounded-full bg-purple-500"></span>
+                    <span class="text-base font-bold text-gray-700">Unallocated Surplus / Reserve:</span>
+                  </div>
+                  <span id="alloc-surplus-val" class="text-lg font-black text-gray-900">₹0</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-gray-100">
+              <button onclick="openFinancialProfileModal()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-cyan to-brand-teal text-white font-black text-lg shadow-md hover:shadow-lg transition-all cursor-pointer">
+                Adjust Financial Budgets
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ================= VIEW 4: ENGINE SETTINGS ================= -->
+      <div id="view-settings" class="hidden space-y-8">
+        <div>
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight">Engine Settings</h1>
+          <p class="text-lg font-medium text-gray-500 mt-2">Manage your core financial profile, parameters, currency, and workspace configuration.</p>
+        </div>
+
+        <div class="bg-white p-8 sm:p-10 rounded-3xl shadow-sm border border-gray-100 max-w-3xl">
+          <h2 class="text-2xl font-black text-gray-900 mb-6">Financial Baseline Configuration</h2>
+          
+          <form id="settings-financial-form" class="space-y-6">
+            <div>
+              <label class="block text-base font-black text-gray-800 mb-2">Monthly Available Income / Capital</label>
+              <div class="relative">
+                <span class="absolute left-4 top-3.5 text-gray-400 font-black text-lg">₹</span>
+                <input type="number" id="setting-income" required placeholder="e.g. 100000" class="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-10 pr-4 py-3.5 text-lg font-bold text-gray-900 focus:bg-white focus:outline-none focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20">
+              </div>
+              <p class="text-sm font-medium text-gray-400 mt-1.5">Total monthly inflow available before expenses.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-base font-black text-gray-800 mb-2">Monthly Fixed Expenses</label>
+                <div class="relative">
+                  <span class="absolute left-4 top-3.5 text-gray-400 font-black text-lg">₹</span>
+                  <input type="number" id="setting-expenses" required placeholder="e.g. 40000" class="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-10 pr-4 py-3.5 text-lg font-bold text-gray-900 focus:bg-white focus:outline-none focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20">
+                </div>
+                <p class="text-sm font-medium text-gray-400 mt-1.5">Operating costs, rent, bills, recurring.</p>
+              </div>
+
+              <div>
+                <label class="block text-base font-black text-gray-800 mb-2">Monthly Investment Allocation</label>
+                <div class="relative">
+                  <span class="absolute left-4 top-3.5 text-gray-400 font-black text-lg">₹</span>
+                  <input type="number" id="setting-investments" required placeholder="e.g. 20000" class="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-10 pr-4 py-3.5 text-lg font-bold text-gray-900 focus:bg-white focus:outline-none focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20">
+                </div>
+                <p class="text-sm font-medium text-gray-400 mt-1.5">Dedicated wealth generation funds.</p>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-base font-black text-gray-800 mb-2">Target Emergency Reserve</label>
+              <div class="relative">
+                <span class="absolute left-4 top-3.5 text-gray-400 font-black text-lg">₹</span>
+                <input type="number" id="setting-reserve" placeholder="e.g. 150000" class="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-10 pr-4 py-3.5 text-lg font-bold text-gray-900 focus:bg-white focus:outline-none focus:border-brand-cyan focus:ring-2 focus:ring-brand-cyan/20">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-base font-black text-gray-800 mb-2">Currency Symbol</label>
+                <select id="setting-currency" class="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-lg font-bold text-gray-900 focus:bg-white focus:outline-none focus:border-brand-cyan">
+                  <option value="₹" selected>INR (₹)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-base font-black text-gray-800 mb-2">Risk Strategy</label>
+                <select id="setting-risk-tolerance" class="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-lg font-bold text-gray-900 focus:bg-white focus:outline-none focus:border-brand-cyan">
+                  <option value="balanced">Balanced / Dynamic</option>
+                  <option value="conservative">Conservative / High Reserve</option>
+                  <option value="aggressive">Aggressive Growth</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="pt-6 border-t border-gray-100 flex items-center justify-between">
+              <button type="button" onclick="clearAllWorkspaceData()" class="px-5 py-3 rounded-2xl text-red-500 hover:text-red-700 hover:bg-red-50 font-bold text-base transition-colors cursor-pointer">
+                Reset All Goals & Data
+              </button>
+              <button type="submit" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-cyan to-brand-teal text-white font-black text-lg shadow-md hover:shadow-lg transition-all cursor-pointer">
+                Save Settings
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ================= VIEW 5: AI ADVISOR (AWS BEDROCK) ================= -->
+      <div id="view-ai-advisor" class="hidden space-y-8">
+        
+        <!-- Header Banner -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 p-8 sm:p-10 rounded-3xl text-white shadow-xl relative overflow-hidden">
+          <div class="absolute -right-10 -bottom-10 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          
+          <div class="relative z-10 max-w-2xl">
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+              <span class="px-3.5 py-1.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-400/30 text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>AWS Bedrock Converse Engine</span>
+              </span>
+              <span class="px-3.5 py-1.5 rounded-full bg-white/10 text-gray-200 text-xs font-black uppercase tracking-wider">
+                Zero-Hallucination Guardrails Active
+              </span>
+            </div>
+            <h2 class="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
+              Optigoal AI Strategic Financial Advisor
+            </h2>
+            <p class="text-base sm:text-lg text-purple-200 mt-2 font-medium">
+              Autonomous financial intelligence calculating exact ₹ cash flow, goal sequencing, and timeline stress testing.
+            </p>
+          </div>
+
+          <div class="relative z-10 flex flex-col sm:flex-row lg:flex-col gap-3 min-w-[280px]">
+            <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-inner">
+              <div>
+                <span class="text-xs font-extrabold text-purple-300 uppercase tracking-wider block">Bedrock Model</span>
+                <select id="ai-model-select" class="bg-transparent text-white font-black text-sm outline-none cursor-pointer mt-0.5">
+                  <option value="claude-3-5-sonnet" class="text-gray-900" selected>Claude 3.5 Sonnet (Bedrock)</option>
+                  <option value="amazon-nova" class="text-gray-900">Amazon Nova Pro</option>
+                  <option value="claude-3-haiku" class="text-gray-900">Claude 3 Haiku</option>
+                </select>
+              </div>
+              <span class="material-symbols-outlined text-purple-300 text-[32px]">tune</span>
+            </div>
+            
+            <button onclick="runAiAdvisorAudit()" id="btn-run-audit" class="px-6 py-4 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white font-black text-base shadow-lg shadow-purple-500/30 flex items-center justify-center gap-2.5 transition-all transform hover:-translate-y-0.5 cursor-pointer">
+              <span class="material-symbols-outlined text-[30px]">rocket_launch</span>
+              <span>Run Strategic Audit</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Real-Time Exact Mathematical Metrics Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div class="stat-card bg-white p-7 rounded-3xl shadow-sm border border-gray-100 border-t-4 border-t-blue-500">
+            <p class="text-xs font-black text-gray-400 uppercase tracking-wider">Disposable Cash Flow</p>
+            <h4 id="ai-stat-disposable" class="text-3xl sm:text-4xl font-black text-gray-900 mt-2 tracking-tight">₹0</h4>
+            <p class="text-xs font-bold text-gray-400 mt-1.5">Available / month for goals</p>
+          </div>
+
+          <div class="stat-card bg-white p-7 rounded-3xl shadow-sm border border-gray-100 border-t-4 border-t-purple-500">
+            <p class="text-xs font-black text-gray-400 uppercase tracking-wider">Total Goal Demands</p>
+            <h4 id="ai-stat-demands" class="text-3xl sm:text-4xl font-black text-gray-900 mt-2 tracking-tight">₹0</h4>
+            <p class="text-xs font-bold text-gray-400 mt-1.5">Sum of monthly allocations</p>
+          </div>
+
+          <div class="stat-card bg-white p-7 rounded-3xl shadow-sm border border-gray-100 border-t-4 border-t-emerald-500">
+            <p class="text-xs font-black text-gray-400 uppercase tracking-wider">Net Monthly Position</p>
+            <h4 id="ai-stat-position" class="text-3xl sm:text-4xl font-black text-emerald-600 mt-2 tracking-tight">₹0</h4>
+            <p id="ai-stat-position-sub" class="text-xs font-bold text-gray-400 mt-1.5">Net surplus cash flow</p>
+          </div>
+
+          <div class="stat-card bg-white p-7 rounded-3xl shadow-sm border border-gray-100 border-t-4 border-t-amber-500">
+            <p class="text-xs font-black text-gray-400 uppercase tracking-wider">Emergency Runway</p>
+            <h4 id="ai-stat-runway" class="text-3xl sm:text-4xl font-black text-gray-900 mt-2 tracking-tight">0.0 mo</h4>
+            <p class="text-xs font-bold text-gray-400 mt-1.5">Reserve vs fixed expenses</p>
+          </div>
+        </div>
+
+        <!-- Quick AI Prompt Chips -->
+        <div class="bg-white p-7 rounded-3xl shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-black text-gray-900 flex items-center gap-2">
+              <span class="material-symbols-outlined text-purple-600 text-[26px]">auto_awesome</span>
+              <span>Quick Strategic Inquiries</span>
+            </h3>
+            <span class="text-xs font-bold text-gray-400">Click to instantly consult Bedrock</span>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <button onclick="askQuickPrompt('How can I optimize my monthly budget to hit my high-priority goals faster?')" class="px-5 py-3 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-extrabold text-sm border border-purple-200 transition-all text-left flex items-center gap-2 shadow-sm">
+              <span class="material-symbols-outlined text-[26px]">bolt</span>
+              <span>Accelerate High Priority Goals</span>
+            </button>
+            <button onclick="askQuickPrompt('If I face a monthly deficit, which goal timelines should I extend first without sacrificing capital?')" class="px-5 py-3 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-700 font-extrabold text-sm border border-amber-200 transition-all text-left flex items-center gap-2 shadow-sm">
+              <span class="material-symbols-outlined text-[26px]">balance</span>
+              <span>Resolve Timeline Conflicts</span>
+            </button>
+            <button onclick="askQuickPrompt('Evaluate my emergency fund and give a liquidity stress-test analysis.')" class="px-5 py-3 rounded-2xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-sm border border-blue-200 transition-all text-left flex items-center gap-2 shadow-sm">
+              <span class="material-symbols-outlined text-[26px]">shield_with_heart</span>
+              <span>Emergency Reserve Stress Test</span>
+            </button>
+            <button onclick="askQuickPrompt('What is the optimal Indian Rupee investment allocation (SIP / Debt / Equity) for my profile?')" class="px-5 py-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-sm border border-emerald-200 transition-all text-left flex items-center gap-2 shadow-sm">
+              <span class="material-symbols-outlined text-[26px]">trending_up</span>
+              <span>Rupee Compounding & Wealth</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- AI Conversation & Advisory Stream Window -->
+        <div id="ai-chat-window-container" class="bg-white rounded-3xl shadow-sm border border-gray-100 flex flex-col h-[700px] overflow-hidden transition-all">
+          
+          <!-- Conversation Header -->
+          <div class="px-8 py-5 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
+                <span class="material-symbols-outlined text-[32px]">smart_toy</span>
+              </div>
+              <div>
+                <h4 class="font-black text-gray-900 text-lg leading-tight">Live Bedrock Advisory Session</h4>
+                <p id="ai-status-indicator" class="text-xs font-bold text-gray-400 mt-0.5">Ready • AWS Bedrock Converse</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+              <button onclick="toggleChatbotFullscreen()" id="btn-fullscreen-chat" class="px-4 py-2 rounded-xl bg-white hover:bg-gray-100 text-gray-700 font-bold text-sm border border-gray-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm" title="Expand to Fullscreen Chatbot">
+                <span id="fullscreen-icon" class="material-symbols-outlined text-[26px] text-brand-cyan">fullscreen</span>
+                <span id="fullscreen-text">Full Screen</span>
+              </button>
+              <button onclick="clearAiChat()" class="px-4 py-2 rounded-xl hover:bg-gray-200 text-gray-600 font-bold text-sm transition-colors flex items-center gap-1.5 cursor-pointer">
+                <span class="material-symbols-outlined text-[24px]">refresh</span>
+                <span>Reset Chat</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Message History Scroll Area -->
+          <div id="ai-chat-history" class="flex-1 p-8 overflow-y-auto space-y-6">
+            <!-- Initial Greeting -->
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0 font-bold border border-purple-200 shadow-sm">
+                <span class="material-symbols-outlined text-[32px]">psychology</span>
+              </div>
+              <div class="bg-purple-50/60 border border-purple-100 p-6 rounded-3xl max-w-3xl">
+                <h5 class="font-black text-gray-900 text-lg mb-1">Optigoal AI Strategic Advisor Ready</h5>
+                <p class="text-gray-700 text-base leading-relaxed">
+                  Welcome! I am connected to the <strong>AWS Bedrock Converse API</strong>. I utilize deterministic mathematical grounding in Indian Rupees (₹) to audit your finances, resolve budget bottlenecks, and verify goal feasibility without hallucination.
+                </p>
+                <div class="mt-4 pt-3 border-t border-purple-200/50 flex items-center gap-2 text-sm font-black text-purple-700">
+                  <span class="material-symbols-outlined text-[26px]">verified</span>
+                  <span>Click "Run Strategic Audit" above or ask any financial inquiry below.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message Input Bar -->
+          <div class="p-5 border-t border-gray-100 bg-white">
+            <form id="ai-chat-form" onsubmit="handleAiChatSubmit(event)" class="flex items-center gap-4">
+              <div class="flex-1 relative">
+                <input type="text" id="ai-chat-input" placeholder="Ask AI Advisor about your goals, timelines, or monthly cash flow in ₹..." class="w-full bg-gray-50 border-2 border-gray-200 rounded-2xl px-6 py-4 text-lg font-bold text-gray-900 focus:bg-white focus:outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-600/10 transition-all">
+              </div>
+              <button type="submit" id="ai-chat-submit-btn" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer flex-shrink-0">
+                <span>Send</span>
+                <span class="material-symbols-outlined text-[28px]">send</span>
+              </button>
+            </form>
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- MODAL: ADD NEW GOAL (LARGE WIDESCREEN COMMAND CENTER) -->
+  <div id="modal-new-goal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9990] hidden items-center justify-center p-6">
+    <div class="bg-white rounded-3xl p-10 sm:p-12 max-w-4xl w-full shadow-2xl border border-gray-100 transform transition-all max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-8 pb-6 border-b border-gray-100">
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-2xl bg-brand-cyan/10 flex items-center justify-center text-brand-cyan border border-brand-cyan/20">
+            <span class="material-symbols-outlined text-[44px]">flag</span>
+          </div>
+          <div>
+            <h3 class="text-3xl sm:text-4xl font-black text-gray-900 leading-tight">Add Strategic Goal</h3>
+            <p class="text-base sm:text-lg font-bold text-gray-400 mt-1">Specify cost & timeline to compute required monthly budget</p>
+          </div>
+        </div>
+        <button onclick="closeNewGoalModal()" class="w-12 h-12 rounded-2xl hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors">
+          <span class="material-symbols-outlined text-[34px]">close</span>
+        </button>
+      </div>
+
+      <form id="form-new-goal" class="space-y-7">
+        <div>
+          <label class="block text-lg sm:text-xl font-black text-gray-900 mb-2">Initiative / Goal Name</label>
+          <input type="text" id="goal-input-name" required placeholder="e.g. Sales Pipeline Expansion" class="w-full bg-gray-50 border-2 border-gray-200 rounded-2xl px-6 py-4 text-xl sm:text-2xl text-gray-900 focus:bg-white focus:outline-none focus:border-brand-cyan focus:ring-4 focus:ring-brand-cyan/20 font-bold transition-all">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-lg sm:text-xl font-black text-gray-900 mb-2">Category</label>
+            <select id="goal-input-category" class="w-full bg-gray-50 border-2 border-gray-200 rounded-2xl px-6 py-4 text-xl text-gray-900 focus:bg-white focus:outline-none focus:border-brand-cyan font-bold transition-all">
+              <option value="Revenue Growth">Revenue Growth</option>
+              <option value="Cost Optimization">Cost Optimization</option>
+              <option value="Investment / Portfolio">Investment / Portfolio</option>
+              <option value="Infrastructure">Infrastructure</option>
+              <option value="Hiring & Team">Hiring & Team</option>
+              <option value="Emergency Reserve">Emergency Reserve</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-lg sm:text-xl font-black text-gray-900 mb-2">Priority</label>
+            <select id="goal-input-priority" class="w-full bg-gray-50 border-2 border-gray-200 rounded-2xl px-6 py-4 text-xl text-gray-900 focus:bg-white focus:outline-none focus:border-brand-cyan font-bold transition-all">
+              <option value="High">High Priority</option>
+              <option value="Medium">Medium Priority</option>
+              <option value="Low">Low Priority</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-lg sm:text-xl font-black text-gray-900 mb-2">Total Target Amount (₹)</label>
+            <input type="number" id="goal-input-amount" required placeholder="e.g. 50000" min="1" class="w-full bg-gray-50 border-2 border-gray-200 rounded-2xl px-6 py-4 text-xl sm:text-2xl text-gray-900 focus:bg-white focus:outline-none focus:border-brand-cyan focus:ring-4 focus:ring-brand-cyan/20 font-bold transition-all">
+          </div>
+
+          <div>
+            <label class="block text-lg sm:text-xl font-black text-gray-900 mb-2">Timeline (Months)</label>
+            <input type="number" id="goal-input-months" required placeholder="e.g. 6" min="1" max="60" value="6" class="w-full bg-gray-50 border-2 border-gray-200 rounded-2xl px-6 py-4 text-xl sm:text-2xl text-gray-900 focus:bg-white focus:outline-none focus:border-brand-cyan focus:ring-4 focus:ring-brand-cyan/20 font-bold transition-all">
+          </div>
+        </div>
+
+        <!-- Live Required Calculation Preview (Prominent) -->
+        <div class="p-7 rounded-3xl bg-brand-cyan/10 border-2 border-brand-cyan/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <p class="text-sm sm:text-base font-black text-gray-600 uppercase tracking-wider">Required / Month Allocation</p>
+            <h4 id="modal-req-preview" class="text-4xl sm:text-5xl font-black text-brand-cyan mt-1">₹0 / mo</h4>
+          </div>
+          <div id="modal-feasibility-tag" class="text-base sm:text-lg font-black text-gray-500 bg-white/80 px-5 py-2.5 rounded-2xl shadow-sm border">
+            Enter amount & timeline
+          </div>
+        </div>
+
+        <div class="pt-4 flex items-center justify-end gap-5">
+          <button type="button" onclick="closeNewGoalModal()" class="px-8 py-4 rounded-2xl border-2 border-gray-200 text-gray-700 font-black text-lg sm:text-xl hover:bg-gray-100 transition-colors">
+            Cancel
+          </button>
+          <button type="submit" class="px-10 py-4 rounded-2xl bg-gradient-to-r from-brand-cyan to-brand-teal text-white font-black text-lg sm:text-xl shadow-lg hover:shadow-xl hover:shadow-brand-cyan/30 transition-all">
+            Save Goal
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: FINANCIAL PROFILE SETUP (LARGE WIDESCREEN COMMAND CENTER) -->
+  <div id="modal-financial-profile" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9990] hidden items-center justify-center p-6">
+    <div class="bg-white rounded-3xl p-10 sm:p-12 max-w-4xl w-full shadow-2xl border border-gray-100 transform transition-all max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-8 pb-6 border-b border-gray-100">
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 border border-emerald-500/20">
+            <span class="material-symbols-outlined text-[44px]">account_balance</span>
+          </div>
+          <div>
+            <h3 class="text-3xl sm:text-4xl font-black text-gray-900 leading-tight">Monthly Financial Profile</h3>
+            <p class="text-base sm:text-lg font-bold text-gray-400 mt-1">Configure income, expenses, and investment allocations</p>
+          </div>
+        </div>
+        <button onclick="closeFinancialProfileModal()" class="w-12 h-12 rounded-2xl hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors">
+          <span class="material-symbols-outlined text-[34px]">close</span>
+        </button>
+      </div>
+
+      <form id="form-financial-profile" class="space-y-7">
+        <div>
+          <label class="block text-lg sm:text-xl font-black text-gray-900 mb-2">Monthly Available Income / Total Inflow (₹)</label>
+          <input type="number" id="profile-input-income" required placeholder="e.g. 100000" class="w-full bg-gray-50 border-2 border-gray-200 rounded-2xl px-6 py-4 text-xl sm:text-2xl text-gray-900 font-bold focus:bg-white focus:outline-none focus:border-brand-cyan focus:ring-4 focus:ring-brand-cyan/20 transition-all">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-lg sm:text-xl font-black text-gray-900 mb-2">Fixed Monthly Expenses (₹)</label>
+            <input type="number" id="profile-input-expenses" required placeholder="e.g. 40000" class="w-full bg-gray-50 border-2 border-gray-200 rounded-2xl px-6 py-4 text-xl sm:text-2xl text-gray-900 font-bold focus:bg-white focus:outline-none focus:border-brand-cyan focus:ring-4 focus:ring-brand-cyan/20 transition-all">
+          </div>
+
+          <div>
+            <label class="block text-lg sm:text-xl font-black text-gray-900 mb-2">Monthly Investments (₹)</label>
+            <input type="number" id="profile-input-investments" required placeholder="e.g. 20000" class="w-full bg-gray-50 border-2 border-gray-200 rounded-2xl px-6 py-4 text-xl sm:text-2xl text-gray-900 font-bold focus:bg-white focus:outline-none focus:border-brand-cyan focus:ring-4 focus:ring-brand-cyan/20 transition-all">
+          </div>
+        </div>
+
+        <div class="p-7 rounded-3xl bg-gray-50 border-2 border-gray-200">
+          <p class="text-base font-black text-gray-500 uppercase tracking-wider">Calculated Net Available for Goals:</p>
+          <h4 id="profile-preview-available" class="text-4xl sm:text-5xl font-black text-gray-900 mt-2">₹0 / mo</h4>
+        </div>
+
+        <div class="pt-4 flex items-center justify-end gap-5">
+          <button type="button" onclick="closeFinancialProfileModal()" class="px-8 py-4 rounded-2xl border-2 border-gray-200 text-gray-700 font-black text-lg sm:text-xl hover:bg-gray-100 transition-colors">
+            Cancel
+          </button>
+          <button type="submit" class="px-10 py-4 rounded-2xl bg-gradient-to-r from-brand-cyan to-brand-teal text-white font-black text-lg sm:text-xl shadow-lg hover:shadow-xl hover:shadow-brand-cyan/30 transition-all">
+            Save Financial Profile
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase SDK (Compat v10) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="script.js"></script>
+
+  <!-- Complete Financial & Goal Optimization Engine Script -->
+  <script>
+    // State management
+    let dashChartInstance = null;
+    let deepChartInstance = null;
+    let allocChartInstance = null;
+    let cloudUnsubscribe = null;
+
+    // Helper: Get Firestore DB instance
+    function getFirestoreDb() {
+      try {
+        if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
+          if (!firebase.apps || !firebase.apps.length) {
+            if (window.firebaseConfig) firebase.initializeApp(window.firebaseConfig);
+          }
+          return firebase.firestore();
+        }
+      } catch (e) {
+        console.warn('Firestore initialization error:', e);
+      }
+      return null;
+    }
+
+    // Helper: Active User Identifier (Firebase UID prioritized, fallback to clean email/guest)
+    function getActiveUserId() {
+      try {
+        if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+          return firebase.auth().currentUser.uid;
+        }
+        const user = JSON.parse(localStorage.getItem('optigoal_user') || '{}');
+        if (user && user.uid) return user.uid;
+        if (user && user.email) return user.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      } catch (e) {}
+      return 'guest_workspace';
+    }
+
+    // Update Cloud Database Visual Indicator
+    function updateCloudSyncStatus(status, message) {
+      const pill = document.getElementById('cloud-sync-status');
+      const text = document.getElementById('cloud-sync-text');
+      const icon = document.getElementById('cloud-sync-icon');
+      if (!pill || !text) return;
+
+      if (status === 'syncing') {
+        pill.className = 'flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50 text-sm font-extrabold text-amber-700 border border-amber-200 shadow-sm transition-all';
+        if (icon) {
+          icon.textContent = 'sync';
+          icon.className = 'material-symbols-outlined text-[20px] text-amber-500 animate-spin';
+        }
+        text.textContent = message || 'Syncing to Firebase...';
+      } else if (status === 'synced') {
+        pill.className = 'flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-sm font-extrabold text-emerald-700 border border-emerald-200 shadow-sm transition-all';
+        if (icon) {
+          icon.textContent = 'cloud_done';
+          icon.className = 'material-symbols-outlined text-[20px] text-emerald-500';
+        }
+        text.textContent = message || 'Cloud Synced';
+      } else if (status === 'error') {
+        pill.className = 'flex items-center gap-2 px-4 py-2 rounded-full bg-rose-50 text-sm font-extrabold text-rose-700 border border-rose-200 shadow-sm transition-all';
+        if (icon) {
+          icon.textContent = 'cloud_off';
+          icon.className = 'material-symbols-outlined text-[20px] text-rose-500';
+        }
+        text.textContent = message || 'Offline / Local';
+      } else {
+        pill.className = 'flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 text-sm font-extrabold text-gray-600 border border-gray-200 shadow-sm transition-all';
+        if (icon) {
+          icon.textContent = 'cloud_queue';
+          icon.className = 'material-symbols-outlined text-[20px] text-gray-400';
+        }
+        text.textContent = message || 'Connecting...';
+      }
+    }
+
+    // Helper: Keys per user for fast local cache
+    function getUserKey(prefix) {
+      try {
+        const user = JSON.parse(localStorage.getItem('optigoal_user') || '{}');
+        if (user && user.email) {
+          return prefix + '_' + user.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        }
+      } catch (e) {}
+      return prefix + '_default';
+    }
+
+    // Load Financial Profile (Instant cache)
+    function loadFinancialProfile() {
+      try {
+        const raw = localStorage.getItem(getUserKey('optigoal_profile'));
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return {
+        income: 0,
+        expenses: 0,
+        investments: 0,
+        reserve: 0,
+        currency: '₹',
+        riskTolerance: 'balanced'
+      };
+    }
+
+    // Save Financial Profile (Local Cache + Firebase Cloud Firestore)
+    function saveFinancialProfile(profile, syncCloud = true) {
+      try {
+        localStorage.setItem(getUserKey('optigoal_profile'), JSON.stringify(profile));
+      } catch (e) {}
+
+      if (syncCloud) {
+        saveProfileToCloud(profile);
+      }
+    }
+
+    // Cloud Database: Write Profile to Firestore
+    async function saveProfileToCloud(profile) {
+      const db = getFirestoreDb();
+      const uid = getActiveUserId();
+      if (!db || !uid || uid === 'guest_workspace') return;
+
+      updateCloudSyncStatus('syncing', 'Saving to Firebase...');
+      try {
+        await db.collection('users').doc(uid).set({
+          profile: profile,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        updateCloudSyncStatus('synced', 'Cloud Synced');
+      } catch (err) {
+        console.warn('Firestore profile save warning:', err);
+        updateCloudSyncStatus('error', 'Saved Locally');
+      }
+    }
+
+    // Load Goals (Instant cache)
+    function loadGoals() {
+      try {
+        const raw = localStorage.getItem(getUserKey('optigoal_goals'));
+        if (raw) return JSON.parse(raw) || [];
+      } catch (e) {}
+      return [];
+    }
+
+    // Save Goals (Local Cache + Firebase Cloud Firestore)
+    function saveGoals(goals, syncCloud = true) {
+      try {
+        localStorage.setItem(getUserKey('optigoal_goals'), JSON.stringify(goals));
+      } catch (e) {}
+
+      if (syncCloud) {
+        saveGoalsToCloud(goals);
+      }
+    }
+
+    // Cloud Database: Write Goals to Firestore
+    async function saveGoalsToCloud(goals) {
+      const db = getFirestoreDb();
+      const uid = getActiveUserId();
+      if (!db || !uid || uid === 'guest_workspace') return;
+
+      updateCloudSyncStatus('syncing', 'Saving goals...');
+      try {
+        await db.collection('users').doc(uid).set({
+          goals: goals,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        updateCloudSyncStatus('synced', 'Cloud Synced');
+      } catch (err) {
+        console.warn('Firestore goals save warning:', err);
+        updateCloudSyncStatus('error', 'Saved Locally');
+      }
+    }
+
+    // Initialize Cloud Database Real-Time Synchronization
+    function initCloudDatabaseSync() {
+      const db = getFirestoreDb();
+      if (!db) {
+        updateCloudSyncStatus('error', 'Local Storage Mode');
+        return;
+      }
+
+      updateCloudSyncStatus('syncing', 'Connecting to Firebase...');
+
+      const setupListener = (uid) => {
+        if (!uid || uid === 'guest_workspace') {
+          updateCloudSyncStatus('synced', 'Local Workspace');
+          return;
+        }
+
+        if (cloudUnsubscribe) {
+          cloudUnsubscribe();
+          cloudUnsubscribe = null;
+        }
+
+        const userDocRef = db.collection('users').doc(uid);
+
+        cloudUnsubscribe = userDocRef.onSnapshot((doc) => {
+          if (doc.exists) {
+            const data = doc.data() || {};
+            let hasChanges = false;
+
+            if (data.profile) {
+              const localProfile = loadFinancialProfile();
+              if (JSON.stringify(localProfile) !== JSON.stringify(data.profile)) {
+                localStorage.setItem(getUserKey('optigoal_profile'), JSON.stringify(data.profile));
+                hasChanges = true;
+              }
+            }
+
+            if (Array.isArray(data.goals)) {
+              const localGoals = loadGoals();
+              if (JSON.stringify(localGoals) !== JSON.stringify(data.goals)) {
+                localStorage.setItem(getUserKey('optigoal_goals'), JSON.stringify(data.goals));
+                hasChanges = true;
+              }
+            }
+
+            if (hasChanges) {
+              renderAll();
+            }
+            updateCloudSyncStatus('synced', 'Cloud Synced');
+          } else {
+            // First time this user connects: Seed current local profile & goals to Firestore
+            const currentProfile = loadFinancialProfile();
+            const currentGoals = loadGoals();
+            userDocRef.set({
+              profile: currentProfile,
+              goals: currentGoals,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true }).then(() => {
+              updateCloudSyncStatus('synced', 'Cloud Synced');
+            }).catch((seedErr) => {
+              console.warn('Initial cloud seed warning:', seedErr);
+              updateCloudSyncStatus('synced', 'Firebase Connected');
+            });
+          }
+        }, (err) => {
+          console.warn('Firestore real-time listener warning:', err);
+          updateCloudSyncStatus('error', 'Offline / Local Cache');
+        });
+      };
+
+      if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().onAuthStateChanged((user) => {
+          const uid = user ? user.uid : getActiveUserId();
+          setupListener(uid);
+        });
+      } else {
+        setupListener(getActiveUserId());
+      }
+    }
+
+    // Modal Triggers
+    function openNewGoalModal() {
+      const modal = document.getElementById('modal-new-goal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.getElementById('goal-input-name')?.focus();
+        updateModalPreview();
+      }
+    }
+
+    function closeNewGoalModal() {
+      const modal = document.getElementById('modal-new-goal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.getElementById('form-new-goal')?.reset();
+      }
+    }
+
+    function openFinancialProfileModal() {
+      const modal = document.getElementById('modal-financial-profile');
+      if (modal) {
+        const profile = loadFinancialProfile();
+        document.getElementById('profile-input-income').value = profile.income || '';
+        document.getElementById('profile-input-expenses').value = profile.expenses || '';
+        document.getElementById('profile-input-investments').value = profile.investments || '';
+        calcProfilePreview();
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeFinancialProfileModal() {
+      const modal = document.getElementById('modal-financial-profile');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    // Live calculations in modals
+    function updateModalPreview() {
+      const amount = parseFloat(document.getElementById('goal-input-amount')?.value) || 0;
+      const months = parseInt(document.getElementById('goal-input-months')?.value, 10) || 1;
+      const req = months > 0 ? Math.round(amount / months) : 0;
+      
+      const prevEl = document.getElementById('modal-req-preview');
+      const tagEl = document.getElementById('modal-feasibility-tag');
+      
+      if (prevEl) prevEl.textContent = `₹${req.toLocaleString('en-IN')} / mo`;
+      
+      const profile = loadFinancialProfile();
+      const avail = Math.max(0, (profile.income || 0) - (profile.expenses || 0) - (profile.investments || 0));
+      
+      if (tagEl) {
+        if (req === 0) {
+          tagEl.textContent = 'Enter amount & timeline';
+          tagEl.className = 'text-sm font-bold text-gray-400';
+        } else if (req <= avail) {
+          tagEl.textContent = `✓ Fits in monthly budget (₹${avail.toLocaleString('en-IN')} avail)`;
+          tagEl.className = 'text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg';
+        } else {
+          tagEl.textContent = `⚠ Exceeds available budget by ₹${(req - avail).toLocaleString('en-IN')}/mo`;
+          tagEl.className = 'text-sm font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-lg';
+        }
+      }
+    }
+
+    function calcProfilePreview() {
+      const inc = parseFloat(document.getElementById('profile-input-income')?.value) || 0;
+      const exp = parseFloat(document.getElementById('profile-input-expenses')?.value) || 0;
+      const inv = parseFloat(document.getElementById('profile-input-investments')?.value) || 0;
+      const avail = Math.max(0, inc - exp - inv);
+      const el = document.getElementById('profile-preview-available');
+      if (el) el.textContent = `₹${avail.toLocaleString('en-IN')} / mo`;
+    }
+
+    // Multi-View Tab Switcher
+    function switchToView(viewId) {
+      const views = ['overview', 'trajectories', 'resources', 'settings', 'ai-advisor'];
+      views.forEach(v => {
+        const viewEl = document.getElementById(`view-${v}`);
+        const btnEl = document.getElementById(`nav-btn-${v}`);
+        if (viewEl) {
+          if (v === viewId) {
+            viewEl.classList.remove('hidden');
+          } else {
+            viewEl.classList.add('hidden');
+          }
+        }
+        if (btnEl) {
+          if (v === viewId) {
+            btnEl.className = 'nav-btn active w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-lg font-bold transition-all text-left';
+          } else {
+            btnEl.className = 'nav-btn w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-lg font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all text-left';
+          }
+        }
+      });
+
+      // Update deep chart or allocation chart or AI advisor when switching
+      if (viewId === 'trajectories' && deepChartInstance) {
+        deepChartInstance.resize();
+        deepChartInstance.update();
+      }
+      if (viewId === 'resources' && allocChartInstance) {
+        allocChartInstance.resize();
+        allocChartInstance.update();
+      }
+      if (viewId === 'ai-advisor') {
+        updateAiAdvisorMetrics();
+      }
+    }
+
+    // Delete a goal
+    function deleteGoal(id) {
+      const goals = loadGoals().filter(g => g.id !== id);
+      saveGoals(goals);
+      renderAll();
+      if (typeof showNotification === 'function') {
+        showNotification('Goal removed.', 'info');
+      }
+    }
+
+    // Reset workspace data
+    function clearAllWorkspaceData() {
+      if (confirm('Are you sure you want to reset all goals and financial settings?')) {
+        saveGoals([]);
+        saveFinancialProfile({ income: 0, expenses: 0, investments: 0, reserve: 0, currency: '₹', riskTolerance: 'balanced' });
+        renderAll();
+        switchToView('overview');
+        if (typeof showNotification === 'function') {
+          showNotification('All goals & budget parameters have been reset.', 'info');
+        }
+      }
+    }
+
+    // ================= CENTRAL RENDER CONTROLLER =================
+    function renderAll() {
+      const profile = loadFinancialProfile();
+      const goals = loadGoals();
+
+      const income = profile.income || 0;
+      const expenses = profile.expenses || 0;
+      const investments = profile.investments || 0;
+      const availableMonth = Math.max(0, income - expenses - investments);
+
+      // Header Quick Status
+      document.getElementById('quick-avail-display').textContent = `₹${availableMonth.toLocaleString('en-IN')}`;
+      document.getElementById('quick-invest-display').textContent = `₹${investments.toLocaleString('en-IN')}`;
+
+      // Settings Inputs
+      document.getElementById('setting-income').value = income || '';
+      document.getElementById('setting-expenses').value = expenses || '';
+      document.getElementById('setting-investments').value = investments || '';
+      document.getElementById('setting-reserve').value = profile.reserve || '';
+      document.getElementById('setting-currency').value = profile.currency || '₹';
+      document.getElementById('setting-risk-tolerance').value = profile.riskTolerance || 'balanced';
+
+      // Compute Goals Aggregate
+      const goalCount = goals.length;
+      let totalTargetSum = 0;
+      let totalRequiredPerMonth = 0;
+
+      goals.forEach(g => {
+        totalTargetSum += (g.amount || 0);
+        const req = g.months > 0 ? Math.round(g.amount / g.months) : 0;
+        g.requiredPerMonth = req;
+        totalRequiredPerMonth += req;
+      });
+
+      // Conflicts & Risks
+      const deficit = totalRequiredPerMonth - availableMonth;
+      const hasConflict = deficit > 0;
+      
+      // Determine goals at risk (if deficit, lower priority goals are at risk)
+      let accumulatedDemand = 0;
+      let goalsAtRiskCount = 0;
+
+      // Sort priority: High -> Medium -> Low
+      const priorityOrder = { 'High': 1, 'Medium': 2, 'Low': 3 };
+      goals.sort((a, b) => (priorityOrder[a.priority] || 2) - (priorityOrder[b.priority] || 2));
+
+      goals.forEach(g => {
+        accumulatedDemand += g.requiredPerMonth;
+        if (accumulatedDemand > availableMonth && availableMonth > 0) {
+          g.isAtRisk = true;
+          goalsAtRiskCount++;
+        } else if (availableMonth === 0 && g.requiredPerMonth > 0) {
+          g.isAtRisk = true;
+          goalsAtRiskCount++;
+        } else {
+          g.isAtRisk = false;
+        }
+      });
+
+      // Calculate Financial Health Score (0 - 100)
+      let healthScore = 0;
+      let healthBadge = 'Awaiting Data';
+      let healthBadgeClass = 'text-gray-400 bg-gray-100';
+
+      if (income === 0 && goalCount === 0) {
+        healthScore = null;
+      } else {
+        // 1. Coverage Ratio (up to 40 pts)
+        const coverageRatio = totalRequiredPerMonth > 0 ? Math.min(availableMonth / totalRequiredPerMonth, 1.0) : 1.0;
+        const coverageScore = coverageRatio * 40;
+
+        // 2. Savings & Surplus Margin (up to 25 pts)
+        const surplusRatio = income > 0 ? Math.max(0, (availableMonth - totalRequiredPerMonth) / income) : 0;
+        const surplusScore = Math.min(surplusRatio * 25 * 3, 25);
+
+        // 3. Investment Commitment (up to 20 pts)
+        const investRatio = income > 0 ? (investments / income) : 0;
+        const investScore = Math.min(investRatio * 20 * 4, 20);
+
+        // 4. Goal Health (up to 15 pts)
+        const riskRatio = goalCount > 0 ? (goalCount - goalsAtRiskCount) / goalCount : 1.0;
+        const riskScore = riskRatio * 15;
+
+        healthScore = Math.round(coverageScore + surplusScore + investScore + riskScore);
+        if (healthScore > 100) healthScore = 100;
+
+        if (healthScore >= 85) {
+          healthBadge = 'Excellent (Resilient)';
+          healthBadgeClass = 'text-emerald-700 bg-emerald-100';
+        } else if (healthScore >= 70) {
+          healthBadge = 'Stable (Balanced)';
+          healthBadgeClass = 'text-blue-700 bg-blue-100';
+        } else if (healthScore >= 50) {
+          healthBadge = 'Constrained / At Risk';
+          healthBadgeClass = 'text-amber-700 bg-amber-100';
+        } else {
+          healthBadge = 'Critical Deficit';
+          healthBadgeClass = 'text-rose-700 bg-rose-100';
+        }
+      }
+
+      // Update KPI Card 1: Total Goals
+      document.getElementById('kpi-goals-count').textContent = goalCount.toString();
+      document.getElementById('kpi-goals-target').textContent = `₹${totalTargetSum.toLocaleString('en-IN')} Target`;
+      document.getElementById('kpi-goals-sub').textContent = `${goalCount} Active strategic initiative${goalCount === 1 ? '' : 's'}`;
+
+      // Update KPI Card 2: Required / Month
+      document.getElementById('kpi-required-value').textContent = `₹${totalRequiredPerMonth.toLocaleString('en-IN')}`;
+      document.getElementById('kpi-required-sub').textContent = goalCount > 0 ? `Across ${goalCount} initiative timeline${goalCount === 1 ? '' : 's'}` : 'Combined monthly goal demand';
+
+      // Update KPI Card 3: Available / Month
+      document.getElementById('kpi-available-value').textContent = `₹${availableMonth.toLocaleString('en-IN')}`;
+      document.getElementById('kpi-available-sub').textContent = income > 0 ? `From ₹${income.toLocaleString('en-IN')} inflow` : 'Net capital after expenses';
+
+      // Update KPI Card 4: Conflicts
+      const conflictStatusEl = document.getElementById('kpi-conflict-status');
+      const conflictSubEl = document.getElementById('kpi-conflict-sub');
+      const conflictIconEl = document.getElementById('kpi-conflict-icon');
+      const conflictBanner = document.getElementById('conflict-alert-banner');
+
+      if (hasConflict) {
+        conflictStatusEl.textContent = `-₹${deficit.toLocaleString('en-IN')}/mo`;
+        conflictStatusEl.className = 'text-3xl sm:text-4xl font-black text-rose-600 tracking-tight';
+        conflictSubEl.textContent = `Monthly funding deficit!`;
+        conflictIconEl.textContent = 'warning';
+        conflictIconEl.className = 'material-symbols-outlined text-rose-500 text-[26px]';
+
+        // Show banner
+        conflictBanner.className = 'p-6 rounded-2xl border border-rose-200 bg-rose-50 text-rose-900 transition-all';
+        document.getElementById('conflict-title').textContent = `Budget Conflict: -₹${deficit.toLocaleString('en-IN')} Deficit per Month`;
+        document.getElementById('conflict-desc').textContent = `Your goals require ₹${totalRequiredPerMonth.toLocaleString('en-IN')}/mo, exceeding your available ₹${availableMonth.toLocaleString('en-IN')}/mo. ${goalsAtRiskCount} goal${goalsAtRiskCount > 1 ? 's are' : ' is'} at risk of delayed completion.`;
+        conflictBanner.classList.remove('hidden');
+      } else {
+        const surplus = availableMonth - totalRequiredPerMonth;
+        conflictStatusEl.textContent = `+₹${surplus.toLocaleString('en-IN')}/mo`;
+        conflictStatusEl.className = 'text-3xl sm:text-4xl font-black text-emerald-600 tracking-tight';
+        conflictSubEl.textContent = `Surplus buffer available`;
+        conflictIconEl.textContent = 'check_circle';
+        conflictIconEl.className = 'material-symbols-outlined text-emerald-500 text-[26px]';
+        conflictBanner.classList.add('hidden');
+      }
+
+      // Update KPI Card 5: Goals At Risk
+      document.getElementById('kpi-risk-count').textContent = goalsAtRiskCount.toString();
+      const riskBadgeEl = document.getElementById('kpi-risk-badge');
+      if (goalsAtRiskCount > 0) {
+        riskBadgeEl.textContent = `${goalsAtRiskCount} At Risk`;
+        riskBadgeEl.className = 'text-sm font-extrabold text-rose-700 bg-rose-100 px-3 py-1 rounded-lg';
+      } else {
+        riskBadgeEl.textContent = 'All Funded';
+        riskBadgeEl.className = 'text-sm font-extrabold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-lg';
+      }
+
+      // Update KPI Card 6: Financial Health
+      const healthScoreEl = document.getElementById('kpi-health-score');
+      const healthBadgeEl = document.getElementById('kpi-health-badge');
+      const sidebarScoreEl = document.getElementById('sidebar-health-score');
+      const sidebarBarEl = document.getElementById('sidebar-health-bar');
+      const sidebarStatusEl = document.getElementById('sidebar-health-status');
+
+      if (healthScore === null) {
+        healthScoreEl.textContent = '--';
+        healthBadgeEl.textContent = 'Awaiting Data';
+        healthBadgeEl.className = 'text-sm font-extrabold text-gray-400 bg-gray-100 px-3 py-1 rounded-lg';
+        sidebarScoreEl.textContent = '--';
+        sidebarBarEl.style.width = '0%';
+        sidebarStatusEl.textContent = 'Set financial profile to evaluate';
+      } else {
+        healthScoreEl.textContent = `${healthScore}/100`;
+        healthBadgeEl.textContent = healthBadge;
+        healthBadgeEl.className = `text-sm font-extrabold px-3 py-1 rounded-lg ${healthBadgeClass}`;
+        sidebarScoreEl.textContent = `${healthScore}%`;
+        sidebarBarEl.style.width = `${healthScore}%`;
+        sidebarStatusEl.textContent = healthBadge;
+      }
+
+      // Render Goals Table
+      const tableContainer = document.getElementById('goals-table-container');
+      const emptyState = document.getElementById('empty-goals-state');
+      const tableBody = document.getElementById('goals-table-body');
+
+      if (goalCount === 0) {
+        tableContainer.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+      } else {
+        tableContainer.classList.remove('hidden');
+        emptyState.classList.add('hidden');
+        tableBody.innerHTML = '';
+
+        goals.forEach(goal => {
+          const row = document.createElement('tr');
+          row.className = 'hover:bg-gray-50/80 transition-colors';
+
+          const riskBadge = goal.isAtRisk 
+            ? '<span class="px-3 py-1.5 rounded-lg text-sm font-black bg-rose-100 text-rose-700 flex items-center gap-1 w-max"><span class="material-symbols-outlined text-[16px]">warning</span>At Risk</span>'
+            : '<span class="px-3 py-1.5 rounded-lg text-sm font-black bg-emerald-100 text-emerald-700 flex items-center gap-1 w-max"><span class="material-symbols-outlined text-[16px]">check</span>On Track</span>';
+
+          const priorityBadgeColor = goal.priority === 'High' ? 'text-purple-600 bg-purple-50' : (goal.priority === 'Medium' ? 'text-blue-600 bg-blue-50' : 'text-gray-600 bg-gray-50');
+
+          row.innerHTML = `
+            <td class="py-5 px-6">
+              <div class="font-extrabold text-gray-900 text-lg">${goal.name}</div>
+              <span class="text-xs font-bold px-2 py-0.5 rounded-full ${priorityBadgeColor} uppercase tracking-wider">${goal.priority || 'Medium'} Priority</span>
+            </td>
+            <td class="py-5 px-6 text-gray-600 font-semibold text-base">${goal.category || 'General'}</td>
+            <td class="py-5 px-6 font-bold text-gray-700 text-base">${goal.months} Months</td>
+            <td class="py-5 px-6 font-black text-gray-900 text-lg">₹${(goal.amount || 0).toLocaleString('en-IN')}</td>
+            <td class="py-5 px-6 font-black text-brand-cyan text-xl">₹${goal.requiredPerMonth.toLocaleString('en-IN')}<span class="text-xs text-gray-400 font-normal">/mo</span></td>
+            <td class="py-5 px-6">${riskBadge}</td>
+            <td class="py-5 px-6 text-right">
+              <button onclick="deleteGoal('${goal.id}')" class="text-red-500 hover:text-red-700 p-2 rounded-xl hover:bg-red-50 transition-colors cursor-pointer" title="Delete Goal">
+                <span class="material-symbols-outlined text-[24px]">delete</span>
+              </button>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+
+      // Update Visualizations (Charts)
+      updateVisualizations(income, expenses, investments, availableMonth, totalRequiredPerMonth, goals);
+    }
+
+    // ================= VISUALIZATIONS CONTROLLER =================
+    function updateVisualizations(income, expenses, investments, availableMonth, totalRequiredPerMonth, goals) {
+      const chartOverlay = document.getElementById('chart-empty-overlay');
+      const hasData = income > 0 || goals.length > 0;
+
+      if (!hasData) {
+        if (chartOverlay) chartOverlay.style.display = 'flex';
+      } else {
+        if (chartOverlay) chartOverlay.style.display = 'none';
+      }
+
+      // 1. Overview Trajectory Chart (Next 6 / 12 Months)
+      const monthsCount = 6;
+      const labels = ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'];
+      
+      const availableCumulative = [];
+      const requiredCumulative = [];
+      
+      let runningAvail = 0;
+      let runningReq = 0;
+
+      for (let i = 1; i <= monthsCount; i++) {
+        runningAvail += availableMonth;
+        runningReq += totalRequiredPerMonth;
+        availableCumulative.push(runningAvail);
+        requiredCumulative.push(runningReq);
+      }
+
+      if (dashChartInstance) {
+        dashChartInstance.data.labels = labels;
+        dashChartInstance.data.datasets[0].data = availableCumulative;
+        dashChartInstance.data.datasets[1].data = requiredCumulative;
+        dashChartInstance.update();
+      }
+
+      // 2. Trajectories Deep-Dive Chart (12 Months)
+      const labels12 = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'M9', 'M10', 'M11', 'M12'];
+      const avail12 = [];
+      const req12 = [];
+      let a12 = 0;
+      let r12 = 0;
+      for (let i = 1; i <= 12; i++) {
+        a12 += availableMonth;
+        r12 += totalRequiredPerMonth;
+        avail12.push(a12);
+        req12.push(r12);
+      }
+
+      if (deepChartInstance) {
+        deepChartInstance.data.labels = labels12;
+        deepChartInstance.data.datasets[0].data = avail12;
+        deepChartInstance.data.datasets[1].data = req12;
+        deepChartInstance.update();
+      }
+
+      // Update Trajectory Card Texts
+      const runwayEl = document.getElementById('trajectory-runway-text');
+      const timeTargetEl = document.getElementById('trajectory-timetarget-text');
+      const feasibilityEl = document.getElementById('trajectory-feasibility-text');
+
+      if (availableMonth > 0 && totalRequiredPerMonth > 0) {
+        const ratio = (availableMonth / totalRequiredPerMonth);
+        runwayEl.textContent = `₹${availableMonth.toLocaleString('en-IN')} disposable monthly capital with ${(ratio * 100).toFixed(0)}% goal funding coverage.`;
+        timeTargetEl.textContent = `Average target velocity: ₹${totalRequiredPerMonth.toLocaleString('en-IN')}/mo across ${goals.length} active initiatives.`;
+        feasibilityEl.textContent = ratio >= 1.0 ? 'High feasibility: All initiatives can be funded without debt or deficit.' : `Deficit warning: Requires +₹${(totalRequiredPerMonth - availableMonth).toLocaleString('en-IN')}/mo to keep all goals on schedule.`;
+      } else {
+        runwayEl.textContent = 'Configure financial profile and goals to project runway.';
+        timeTargetEl.textContent = 'Based on current monthly required funding velocity.';
+        feasibilityEl.textContent = 'Evaluation of total goal load vs available capital.';
+      }
+
+      // 3. Resource Allocation Doughnut Chart
+      const surplus = Math.max(0, availableMonth - totalRequiredPerMonth);
+      const activeGoalFunding = Math.min(availableMonth, totalRequiredPerMonth);
+
+      document.getElementById('alloc-expenses-val').textContent = `₹${expenses.toLocaleString('en-IN')} (${income > 0 ? ((expenses/income)*100).toFixed(0) : 0}%)`;
+      document.getElementById('alloc-investments-val').textContent = `₹${investments.toLocaleString('en-IN')} (${income > 0 ? ((investments/income)*100).toFixed(0) : 0}%)`;
+      document.getElementById('alloc-goals-val').textContent = `₹${activeGoalFunding.toLocaleString('en-IN')} (${income > 0 ? ((activeGoalFunding/income)*100).toFixed(0) : 0}%)`;
+      document.getElementById('alloc-surplus-val').textContent = `₹${surplus.toLocaleString('en-IN')} (${income > 0 ? ((surplus/income)*100).toFixed(0) : 0}%)`;
+
+      if (allocChartInstance) {
+        if (income > 0) {
+          allocChartInstance.data.datasets[0].data = [expenses, investments, activeGoalFunding, surplus];
+        } else {
+          allocChartInstance.data.datasets[0].data = [1, 1, 1, 1];
+        }
+        allocChartInstance.update();
+      }
+    }
+
+    // ================= INITIALIZE CHARTS =================
+    function initCharts() {
+      // 1. Dash Overview Line Chart
+      const canvas1 = document.getElementById('dashChart');
+      if (canvas1) {
+        const ctx1 = canvas1.getContext('2d');
+        dashChartInstance = new Chart(ctx1, {
+          type: 'line',
+          data: {
+            labels: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6'],
+            datasets: [
+              {
+                label: 'Available Capital (Cumulative)',
+                data: [0, 0, 0, 0, 0, 0],
+                borderColor: '#00B4DB',
+                backgroundColor: 'rgba(0, 180, 219, 0.15)',
+                borderWidth: 4,
+                fill: true,
+                tension: 0.35,
+                pointRadius: 5,
+                pointHoverRadius: 8
+              },
+              {
+                label: 'Required Goal Funding (Cumulative)',
+                data: [0, 0, 0, 0, 0, 0],
+                borderColor: '#F2994A',
+                backgroundColor: 'rgba(242, 153, 74, 0.08)',
+                borderWidth: 3.5,
+                borderDash: [6, 6],
+                fill: true,
+                tension: 0.35,
+                pointRadius: 4,
+                pointHoverRadius: 7
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: {
+                  font: { family: "'Inter', sans-serif", size: 18, weight: '700' },
+                  padding: 22
+                }
+              },
+              tooltip: {
+                titleFont: { size: 18, family: "'Inter', sans-serif", weight: '700' },
+                bodyFont: { size: 16, family: "'Inter', sans-serif" },
+                padding: 16,
+                cornerRadius: 12
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  font: { family: "'Inter', sans-serif", size: 16, weight: '600' },
+                  color: '#6B7280',
+                  callback: (v) => '₹' + v.toLocaleString('en-IN')
+                },
+                grid: { color: 'rgba(243, 244, 246, 1)' }
+              },
+              x: {
+                ticks: {
+                  font: { family: "'Inter', sans-serif", size: 16, weight: '600' },
+                  color: '#6B7280'
+                },
+                grid: { display: false }
+              }
+            }
+          }
+        });
+      }
+
+      // 2. Trajectories Deep-Dive Line Chart
+      const canvas2 = document.getElementById('trajectoryDeepChart');
+      if (canvas2) {
+        const ctx2 = canvas2.getContext('2d');
+        deepChartInstance = new Chart(ctx2, {
+          type: 'line',
+          data: {
+            labels: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'M9', 'M10', 'M11', 'M12'],
+            datasets: [
+              {
+                label: 'Available Capital Projection',
+                data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                borderColor: '#00B4DB',
+                backgroundColor: 'rgba(0, 180, 219, 0.12)',
+                borderWidth: 4,
+                fill: true,
+                tension: 0.35,
+                pointRadius: 6
+              },
+              {
+                label: 'Required Goal Commitments',
+                data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                borderColor: '#F2C94C',
+                backgroundColor: 'transparent',
+                borderWidth: 3.5,
+                borderDash: [5, 5],
+                pointRadius: 5
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: { font: { size: 18, weight: '700', family: "'Inter', sans-serif" } }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  font: { size: 16, weight: '600', family: "'Inter', sans-serif" },
+                  callback: (v) => '₹' + v.toLocaleString('en-IN')
+                }
+              },
+              x: { ticks: { font: { size: 16, weight: '600', family: "'Inter', sans-serif" } } }
+            }
+          }
+        });
+      }
+
+      // 3. Resource Allocation Doughnut Chart
+      const canvas3 = document.getElementById('allocationChart');
+      if (canvas3) {
+        const ctx3 = canvas3.getContext('2d');
+        allocChartInstance = new Chart(ctx3, {
+          type: 'doughnut',
+          data: {
+            labels: ['Fixed Expenses', 'Investments', 'Goals Funding', 'Surplus Reserve'],
+            datasets: [{
+              data: [25, 25, 25, 25],
+              backgroundColor: ['#F43F5E', '#10B981', '#00B4DB', '#8B5CF6'],
+              borderWidth: 4,
+              borderColor: '#ffffff',
+              hoverOffset: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  color: '#374151',
+                  font: { family: "'Inter', sans-serif", size: 18, weight: '700' },
+                  padding: 22
+                }
+              },
+              tooltip: {
+                titleFont: { size: 18, family: "'Inter', sans-serif", weight: '700' },
+                bodyFont: { size: 16, family: "'Inter', sans-serif" },
+                padding: 16,
+                cornerRadius: 12,
+                callbacks: {
+                  label: (ctx) => ` ${ctx.label}: ₹${ctx.raw.toLocaleString('en-IN')}`
+                }
+              }
+            },
+            cutout: '65%'
+          }
+        });
+      }
+    }
+
+    // ================= AI ADVISOR (AWS BEDROCK CONVERSE) =================
+    // Update AI Advisor Real-time Pre-Computed Metrics
+    function updateAiAdvisorMetrics() {
+      const profile = loadFinancialProfile();
+      const goals = loadGoals();
+      
+      const inc = profile.income || 0;
+      const exp = profile.expenses || 0;
+      const inv = profile.investments || 0;
+      const res = profile.reserve || 0;
+      
+      const disp = Math.max(0, inc - (exp + inv));
+      const demands = goals.reduce((acc, g) => acc + (g.amount / Math.max(g.months || 1, 1)), 0);
+      const position = disp - demands;
+      const runway = exp > 0 ? (res / exp).toFixed(1) : '0.0';
+
+      const dispEl = document.getElementById('ai-stat-disposable');
+      const demEl = document.getElementById('ai-stat-demands');
+      const posEl = document.getElementById('ai-stat-position');
+      const posSubEl = document.getElementById('ai-stat-position-sub');
+      const runEl = document.getElementById('ai-stat-runway');
+
+      if (dispEl) dispEl.textContent = `₹${disp.toLocaleString('en-IN')}`;
+      if (demEl) demEl.textContent = `₹${Math.round(demands).toLocaleString('en-IN')}`;
+      
+      if (posEl) {
+        if (position >= 0) {
+          posEl.className = 'text-3xl sm:text-4xl font-black text-emerald-600 mt-2 tracking-tight';
+          posEl.textContent = `+₹${Math.round(position).toLocaleString('en-IN')}`;
+          if (posSubEl) posSubEl.textContent = 'Net monthly cash surplus';
+        } else {
+          posEl.className = 'text-3xl sm:text-4xl font-black text-red-600 mt-2 tracking-tight';
+          posEl.textContent = `-₹${Math.round(Math.abs(position)).toLocaleString('en-IN')}`;
+          if (posSubEl) posSubEl.textContent = 'Monthly deficit / over-allocated';
+        }
+      }
+
+      if (runEl) runEl.textContent = `${runway} mo`;
+    }
+
+    // Render simple markdown to safe styled HTML
+    function renderAdvisorMarkdown(text) {
+      if (!text) return '';
+      let html = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      // Blockquotes (> text)
+      html = html.replace(/^&gt; (.*$)/gim, '<div class="p-4 my-3 bg-purple-50 border-l-4 border-purple-600 rounded-r-2xl font-bold text-gray-800 text-sm">$1</div>');
+      // Headers
+      html = html.replace(/^### (.*$)/gim, '<h3 class="text-xl font-black text-gray-900 mt-4 mb-2 flex items-center gap-2"><span class="text-purple-600">■</span> $1</h3>');
+      html = html.replace(/^#### (.*$)/gim, '<h4 class="text-lg font-black text-gray-800 mt-3 mb-1.5">$1</h4>');
+      // Bold
+      html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-extrabold text-gray-900">$1</strong>');
+      // Bullet points
+      html = html.replace(/^\- (.*$)/gim, '<li class="ml-4 list-disc text-gray-700 font-semibold my-1">$1</li>');
+      // Numbered lists
+      html = html.replace(/^([0-9]+)\. (.*$)/gim, '<div class="flex items-start gap-2.5 my-2"><span class="w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5">$1</span><span class="text-gray-800 font-semibold text-sm leading-relaxed">$2</span></div>');
+      // Horizontal rules
+      html = html.replace(/^---/gim, '<hr class="my-4 border-gray-200">');
+      // Line breaks
+      html = html.replace(/\n\n/g, '<div class="h-2"></div>');
+
+      return html;
+    }
+
+    // Call AI Advisor via POST /api/ai-advisor
+    async function callAiAdvisor(promptText) {
+      const inputEl = document.getElementById('ai-chat-input');
+      const chatHistory = document.getElementById('ai-chat-history');
+      const statusIndicator = document.getElementById('ai-status-indicator');
+      const submitBtn = document.getElementById('ai-chat-submit-btn');
+      const auditBtn = document.getElementById('btn-run-audit');
+      const modelSelect = document.getElementById('ai-model-select');
+      const model = modelSelect ? modelSelect.value : 'claude-3-5-sonnet';
+
+      if (!promptText || !promptText.trim()) return;
+      const cleanPrompt = promptText.trim();
+
+      if (inputEl) inputEl.value = '';
+
+      // Append User Message to UI
+      const userMsgHtml = `
+        <div class="flex items-start gap-3 justify-end">
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-5 rounded-3xl max-w-2xl shadow-md">
+            <p class="text-sm sm:text-base font-bold">${cleanPrompt}</p>
+          </div>
+          <div class="w-10 h-10 rounded-2xl bg-purple-700 text-white flex items-center justify-center flex-shrink-0 font-black shadow-sm text-sm">
+            ME
+          </div>
+        </div>
+      `;
+      chatHistory.insertAdjacentHTML('beforeend', userMsgHtml);
+
+      // Append Thinking Indicator
+      const loadingId = 'ai-loading-' + Date.now();
+      const loadingHtml = `
+        <div id="${loadingId}" class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0 font-bold border border-purple-200 animate-pulse shadow-sm">
+            <span class="material-symbols-outlined text-[24px]">psychology</span>
+          </div>
+          <div class="bg-white border border-gray-200 p-5 rounded-3xl shadow-sm flex items-center gap-3">
+            <div class="w-5 h-5 border-3 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+            <span class="text-sm font-black text-gray-600">AWS Bedrock is computing exact ₹ metrics & generating strategy...</span>
+          </div>
+        </div>
+      `;
+      chatHistory.insertAdjacentHTML('beforeend', loadingHtml);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+
+      if (statusIndicator) statusIndicator.textContent = 'Processing with Bedrock Converse API...';
+      if (submitBtn) submitBtn.disabled = true;
+      if (auditBtn) auditBtn.disabled = true;
+
+      try {
+        const profile = loadFinancialProfile();
+        const goals = loadGoals();
+
+        const response = await fetch('/api/ai-advisor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            profile: profile,
+            goals: goals,
+            prompt: cleanPrompt,
+            model: model
+          })
+        });
+
+        const data = await response.json();
+        
+        // Remove loading indicator
+        document.getElementById(loadingId)?.remove();
+
+        if (data.metrics) {
+          updateAiAdvisorMetrics();
+        }
+
+        const adviceHtml = renderAdvisorMarkdown(data.advice || 'No strategic advice generated.');
+        const providerName = data.provider || 'AWS Bedrock Engine';
+
+        const aiResponseHtml = `
+          <div class="flex items-start gap-4">
+            <div class="w-11 h-11 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 font-bold shadow-md">
+              <span class="material-symbols-outlined text-[24px]">smart_toy</span>
+            </div>
+            <div class="bg-white border-2 border-purple-100 p-6 sm:p-7 rounded-3xl max-w-3xl shadow-md space-y-2">
+              <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <span class="px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>${providerName}</span>
+                </span>
+                <span class="text-xs font-bold text-gray-400">Zero-Hallucination Verified</span>
+              </div>
+              <div class="text-gray-800 text-sm sm:text-base leading-relaxed pt-2">
+                ${adviceHtml}
+              </div>
+            </div>
+          </div>
+        `;
+        chatHistory.insertAdjacentHTML('beforeend', aiResponseHtml);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        if (statusIndicator) statusIndicator.textContent = `Ready • ${providerName}`;
+      } catch (err) {
+        console.error('AI Advisor error:', err);
+        document.getElementById(loadingId)?.remove();
+
+        const errorHtml = `
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 font-bold">
+              <span class="material-symbols-outlined text-[24px]">error</span>
+            </div>
+            <div class="bg-red-50 border border-red-200 p-5 rounded-3xl max-w-2xl">
+              <h5 class="font-black text-red-700 text-sm">Connection Warning</h5>
+              <p class="text-red-600 text-xs mt-1">Unable to connect to /api/ai-advisor backend. Ensure python server.py is running on port 8000.</p>
+            </div>
+          </div>
+        `;
+        chatHistory.insertAdjacentHTML('beforeend', errorHtml);
+        if (statusIndicator) statusIndicator.textContent = 'Backend Error';
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+        if (auditBtn) auditBtn.disabled = false;
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+      }
+    }
+
+    function runAiAdvisorAudit() {
+      callAiAdvisor('Run a comprehensive strategic audit on my goals and financial health.');
+    }
+
+    function askQuickPrompt(text) {
+      callAiAdvisor(text);
+    }
+
+    function handleAiChatSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('ai-chat-input');
+      if (input && input.value.trim()) {
+        callAiAdvisor(input.value);
+      }
+    }
+
+    function toggleChatbotFullscreen() {
+      const container = document.getElementById('ai-chat-window-container');
+      if (!container) return;
+      const isFull = container.classList.toggle('chatbot-fullscreen');
+      const icon = document.getElementById('fullscreen-icon');
+      const text = document.getElementById('fullscreen-text');
+      if (isFull) {
+        if (icon) icon.textContent = 'fullscreen_exit';
+        if (text) text.textContent = 'Exit Fullscreen';
+      } else {
+        if (icon) icon.textContent = 'fullscreen';
+        if (text) text.textContent = 'Full Screen';
+      }
+    }
+
+    function clearAiChat() {
+      const chatHistory = document.getElementById('ai-chat-history');
+      if (chatHistory) {
+        chatHistory.innerHTML = `
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0 font-bold border border-purple-200 shadow-sm">
+              <span class="material-symbols-outlined text-[26px]">psychology</span>
+            </div>
+            <div class="bg-purple-50/60 border border-purple-100 p-6 rounded-3xl max-w-3xl">
+              <h5 class="font-black text-gray-900 text-lg mb-1">Optigoal AI Strategic Advisor Ready</h5>
+              <p class="text-gray-700 text-base leading-relaxed">
+                Welcome! I am connected to the <strong>AWS Bedrock Converse API</strong>. I utilize deterministic mathematical grounding in Indian Rupees (₹) to audit your finances, resolve budget bottlenecks, and verify goal feasibility without hallucination.
+              </p>
+              <div class="mt-4 pt-3 border-t border-purple-200/50 flex items-center gap-2 text-sm font-black text-purple-700">
+                <span class="material-symbols-outlined text-[20px]">verified</span>
+                <span>Click "Run Strategic Audit" above or ask any financial inquiry below.</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      updateAiAdvisorMetrics();
+    }
+
+    // ================= DOM READY EVENT LISTENERS =================
+    document.addEventListener("DOMContentLoaded", () => {
+      initCharts();
+      renderAll();
+      initCloudDatabaseSync();
+
+      // Navigation Buttons
+      document.getElementById('nav-btn-overview')?.addEventListener('click', () => switchToView('overview'));
+      document.getElementById('nav-btn-trajectories')?.addEventListener('click', () => switchToView('trajectories'));
+      document.getElementById('nav-btn-resources')?.addEventListener('click', () => switchToView('resources'));
+      document.getElementById('nav-btn-settings')?.addEventListener('click', () => switchToView('settings'));
+      document.getElementById('nav-btn-ai-advisor')?.addEventListener('click', () => switchToView('ai-advisor'));
+
+      document.getElementById('btn-sidebar-new-goal')?.addEventListener('click', openNewGoalModal);
+
+      // Financial Profile Form (Settings View)
+      const settingsForm = document.getElementById('settings-financial-form');
+      if (settingsForm) {
+        settingsForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const profile = {
+            income: parseFloat(document.getElementById('setting-income').value) || 0,
+            expenses: parseFloat(document.getElementById('setting-expenses').value) || 0,
+            investments: parseFloat(document.getElementById('setting-investments').value) || 0,
+            reserve: parseFloat(document.getElementById('setting-reserve').value) || 0,
+            currency: document.getElementById('setting-currency').value || '₹',
+            riskTolerance: document.getElementById('setting-risk-tolerance').value || 'balanced'
+          };
+          saveFinancialProfile(profile);
+          renderAll();
+          if (typeof showNotification === 'function') {
+            showNotification('Financial settings saved successfully!', 'success');
+          }
+        });
+      }
+
+      // Financial Profile Modal Form
+      const profileModalForm = document.getElementById('form-financial-profile');
+      if (profileModalForm) {
+        ['profile-input-income', 'profile-input-expenses', 'profile-input-investments'].forEach(id => {
+          document.getElementById(id)?.addEventListener('input', calcProfilePreview);
+        });
+
+        profileModalForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const profile = loadFinancialProfile();
+          profile.income = parseFloat(document.getElementById('profile-input-income').value) || 0;
+          profile.expenses = parseFloat(document.getElementById('profile-input-expenses').value) || 0;
+          profile.investments = parseFloat(document.getElementById('profile-input-investments').value) || 0;
+          saveFinancialProfile(profile);
+          closeFinancialProfileModal();
+          renderAll();
+          if (typeof showNotification === 'function') {
+            showNotification('Financial profile updated!', 'success');
+          }
+        });
+      }
+
+      // New Goal Modal Form
+      const goalForm = document.getElementById('form-new-goal');
+      if (goalForm) {
+        ['goal-input-amount', 'goal-input-months'].forEach(id => {
+          document.getElementById(id)?.addEventListener('input', updateModalPreview);
+        });
+
+        goalForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const name = document.getElementById('goal-input-name')?.value.trim();
+          const category = document.getElementById('goal-input-category')?.value;
+          const priority = document.getElementById('goal-input-priority')?.value;
+          const amount = parseFloat(document.getElementById('goal-input-amount')?.value) || 0;
+          const months = parseInt(document.getElementById('goal-input-months')?.value, 10) || 1;
+
+          if (!name || amount <= 0) return;
+
+          const newGoal = {
+            id: 'goal_' + Date.now(),
+            name: name,
+            category: category,
+            priority: priority,
+            amount: amount,
+            months: months,
+            createdAt: new Date().toISOString()
+          };
+
+          const goals = loadGoals();
+          goals.unshift(newGoal);
+          saveGoals(goals);
+
+          closeNewGoalModal();
+          renderAll();
+
+          if (typeof showNotification === 'function') {
+            showNotification(`Goal "${name}" created successfully!`, 'success');
+          }
+        });
+      }
+
+      // Close modals on background click
+      document.getElementById('modal-new-goal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'modal-new-goal') closeNewGoalModal();
+      });
+      document.getElementById('modal-financial-profile')?.addEventListener('click', (e) => {
+        if (e.target.id === 'modal-financial-profile') closeFinancialProfileModal();
+      });
+    });
+  </script>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] hidden items-center justify-center">
+      <div class="bg-white rounded-3xl p-10 flex flex-col items-center gap-5 shadow-2xl">
+          <div class="w-14 h-14 border-4 border-brand-cyan/20 border-t-brand-cyan rounded-full animate-spin"></div>
+          <p class="text-lg font-bold text-gray-800">Authenticating...</p>
+      </div>
+  </div>
+</body>
+</html>

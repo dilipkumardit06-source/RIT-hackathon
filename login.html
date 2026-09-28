@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>OPTIGOAL ENGINE - Sign Up / Log In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="script.js"></script>
+  <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+                },
+                colors: {
+                    brand: {
+                        cyan: '#00B4DB',
+                        teal: '#0083B0',
+                        gold: '#F2C94C',
+                        bronze: '#F2994A'
+                    }
+                }
+            }
+        }
+    }
+  </script>
+  <style>
+    html {
+      font-size: 24px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    @media (min-width: 1440px) {
+      html {
+        font-size: 26px;
+      }
+    }
+    @media (min-width: 1920px) {
+      html {
+        font-size: 28px;
+      }
+    }
+
+    body { background: #f9fafb; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; letter-spacing: -0.011em; }
+
+    /* Ambient orbs */
+    .orb-1 { position: absolute; top: -10%; left: -10%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(0, 180, 219, 0.15) 0%, transparent 70%); border-radius: 50%; pointer-events: none; z-index: 0; }
+    .orb-2 { position: absolute; bottom: -10%; right: -10%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(242, 201, 76, 0.15) 0%, transparent 70%); border-radius: 50%; pointer-events: none; z-index: 0; }
+
+    /* Input styling */
+    .auth-input {
+      background-color: #ffffff;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 16px 22px;
+      font-size: 1.05rem;
+      font-weight: 500;
+      color: #1f2937;
+      width: 100%;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .auth-input::placeholder { color: #9ca3af; }
+    .auth-input:focus {
+      border-color: #00B4DB;
+      box-shadow: 0 0 0 3px rgba(0, 180, 219, 0.2);
+    }
+
+    /* Tab switcher */
+    .tab-btn {
+      position: relative;
+      padding-bottom: 14px;
+      font-size: 1.25rem;
+      font-weight: 800;
+      transition: color 0.2s ease;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+    }
+    .tab-btn.active { color: #111827; }
+    .tab-btn.inactive { color: #6b7280; }
+    .tab-btn.inactive:hover { color: #374151; }
+    
+    .tab-underline {
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00B4DB, #0083B0);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Gradient Primary CTA */
+    .btn-gradient {
+      background: linear-gradient(135deg, #00B4DB 0%, #0083B0 100%);
+      border-radius: 16px;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 1.2rem;
+      padding: 18px 0;
+      width: 100%;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 180, 219, 0.3);
+      transition: all 0.2s ease;
+    }
+    .btn-gradient:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 180, 219, 0.4);
+    }
+
+    .oauth-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      flex: 1;
+      padding: 16px 20px;
+      border-radius: 16px;
+      border: 1.5px solid #e5e7eb;
+      background: #ffffff;
+      color: #374151;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .oauth-btn:hover {
+      background: #f9fafb;
+      border-color: #d1d5db;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(0, 180, 219, 0.2);
+      border-radius: 16px;
+      backdrop-filter: blur(8px);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center relative overflow-hidden p-4 sm:p-6 text-gray-800">
+
+  <div class="orb-1"></div>
+  <div class="orb-2"></div>
+
+  <div class="absolute top-6 left-6 z-20">
+    <a href="index.html" class="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-brand-cyan transition-colors">
+      <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+      <span>Back to Home</span>
+    </a>
+  </div>
+
+  <main class="relative z-10 w-full max-w-5xl flex flex-col md:flex-row items-stretch min-h-[620px] rounded-3xl overflow-hidden shadow-2xl bg-white border border-gray-100">
+
+    <!-- LEFT SIDE: BRANDING & FEATURES -->
+    <div class="w-full md:w-[48%] p-8 sm:p-12 flex flex-col justify-between relative overflow-hidden bg-gray-50">
+      <div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image:radial-gradient(circle, #00B4DB 1px, transparent 1px); background-size:24px 24px;"></div>
+
+      <div class="relative z-10">
+        <a href="index.html" class="inline-flex items-center mb-10 group text-2xl font-extrabold tracking-tight">
+          OPTIGOAL <span class="text-brand-cyan ml-1">ENGINE</span>
+        </a>
+
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 tracking-tight leading-tight">
+          Accelerate Growth.
+        </h1>
+        <p class="text-sm leading-relaxed mb-8 text-gray-500 font-medium">
+          Join Optigoal Engine to align your trajectory, optimize resources, and achieve strategic OKRs.
+        </p>
+
+        <div class="space-y-4">
+          <div class="feature-item shadow-sm">
+            <span class="material-symbols-outlined text-[24px] text-brand-cyan">monitoring</span>
+            <span class="text-sm font-bold text-gray-700">Predictive Goal Tracking</span>
+          </div>
+          <div class="feature-item shadow-sm">
+            <span class="material-symbols-outlined text-[24px] text-brand-gold">timeline</span>
+            <span class="text-sm font-bold text-gray-700">Automated Trajectory Alignment</span>
+          </div>
+          <div class="feature-item shadow-sm">
+            <span class="material-symbols-outlined text-[24px] text-brand-teal">security</span>
+            <span class="text-sm font-bold text-gray-700">Enterprise Security & SOC2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDE: FORM CONTAINER -->
+    <div class="w-full md:w-[52%] p-8 sm:p-12 flex flex-col justify-center relative bg-white">
+      
+      <div class="relative flex items-center gap-8 mb-8 border-b border-gray-200">
+        <button id="tab-signup" class="tab-btn active">Sign Up</button>
+        <button id="tab-login" class="tab-btn inactive">Log In</button>
+        <div id="tab-underline" class="tab-underline w-[60px] left-0"></div>
+      </div>
+
+      <!-- Loading Overlay -->
+<div id="loading-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] hidden items-center justify-center">
+    <div class="bg-white rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl">
+        <div class="w-12 h-12 border-4 border-brand-cyan/20 border-t-brand-cyan rounded-full animate-spin"></div>
+        <p class="text-sm font-bold text-gray-700">Authenticating...</p>
+    </div>
+</div>
+
+<div class="mb-8">
+    <button class="oauth-btn w-full" type="button" id="oauth-google">
+        <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span id="google-btn-text" class="font-bold">Continue with Google</span>
+    </button>
+</div>
+
+      <div class="flex items-center gap-3 mb-8">
+        <div class="flex-1 h-px bg-gray-200"></div>
+        <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400">or continue with email</span>
+        <div class="flex-1 h-px bg-gray-200"></div>
+      </div>
+
+      <form id="auth-form" class="space-y-5" novalidate>
+        <div id="name-field-container">
+          <label class="block text-sm font-bold text-gray-700 mb-1.5">Full Name</label>
+          <input type="text" class="auth-input" placeholder="Enter your full name" name="fullname" required>
+          <p class="text-red-500 text-sm mt-1 hidden" id="name-error">Please enter your full name</p>
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1.5">Email Address</label>
+          <input type="email" class="auth-input" placeholder="Enter your Email" name="email" required>
+          <p class="text-red-500 text-sm mt-1 hidden" id="email-error">Please enter a valid email address</p>
+        </div>
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <label class="text-sm font-bold text-gray-700">Password</label>
+            <a href="#" id="forgot-password-link" class="text-xs font-semibold text-brand-cyan hover:underline hidden">Forgot password?</a>
+          </div>
+          <input type="password" class="auth-input" placeholder="Create a password (min. 8 characters)" name="password" required>
+          <p class="text-red-500 text-sm mt-1 hidden" id="password-error">Password must be at least 8 characters</p>
+        </div>
+
+        <button type="submit" id="btn-submit-auth" class="btn-gradient mt-4">
+          Create Account
+        </button>
+      </form>
+
+    </div>
+  </main>
+
+  <!-- Firebase SDK (Compat v10) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="script.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      let isSignUp = true;
+
+      function switchAuthTab(mode) {
+        isSignUp = (mode === 'signup');
+        const tabSignup = document.getElementById('tab-signup');
+        const tabLogin = document.getElementById('tab-login');
+        const underline = document.getElementById('tab-underline');
+        const nameContainer = document.getElementById('name-field-container');
+        const submitBtn = document.getElementById('btn-submit-auth');
+        const forgotLink = document.getElementById('forgot-password-link');
+        const passwordInput = document.querySelector('input[name="password"]');
+
+        // Clear existing errors
+        ['name-error', 'email-error', 'password-error'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add('hidden');
+        });
+
+        if (isSignUp) {
+          if (tabSignup) tabSignup.className = 'tab-btn active';
+          if (tabLogin) tabLogin.className = 'tab-btn inactive';
+          if (underline && tabSignup) {
+            underline.style.left = '0px';
+            underline.style.width = tabSignup.offsetWidth + 'px';
+          }
+          if (nameContainer) nameContainer.style.display = 'block';
+          if (forgotLink) forgotLink.classList.add('hidden');
+          if (submitBtn) submitBtn.textContent = 'Create Account';
+          if (passwordInput) passwordInput.placeholder = 'Create a password (min. 8 characters)';
+        } else {
+          if (tabLogin) tabLogin.className = 'tab-btn active';
+          if (tabSignup) tabSignup.className = 'tab-btn inactive';
+          if (underline && tabSignup && tabLogin) {
+            underline.style.left = (tabSignup.offsetWidth + 32) + 'px';
+            underline.style.width = tabLogin.offsetWidth + 'px';
+          }
+          if (nameContainer) nameContainer.style.display = 'none';
+          if (forgotLink) forgotLink.classList.remove('hidden');
+          if (submitBtn) submitBtn.textContent = 'Log In';
+          if (passwordInput) passwordInput.placeholder = 'Enter your password';
+        }
+      }
+
+      window.switchAuthTab = switchAuthTab;
+
+      // Clear error as user types
+      document.querySelectorAll('#auth-form input').forEach(input => {
+        input.addEventListener('input', () => {
+          const errorId = input.name === 'fullname' ? 'name-error' : (input.name === 'email' ? 'email-error' : 'password-error');
+          const errorEl = document.getElementById(errorId);
+          if (errorEl) errorEl.classList.add('hidden');
+        });
+      });
+
+      // Sign Up Handler
+      async function handleSignUp(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        const nameInput = document.querySelector('input[name="fullname"]');
+        const emailInput = document.querySelector('input[name="email"]');
+        const passwordInput = document.querySelector('input[name="password"]');
+        const nameError = document.getElementById('name-error');
+        const emailError = document.getElementById('email-error');
+        const passwordError = document.getElementById('password-error');
+
+        // Reset errors
+        [nameError, emailError, passwordError].forEach(el => el && el.classList.add('hidden'));
+
+        let isValid = true;
+
+        if (!nameInput.value.trim()) {
+          nameError.classList.remove('hidden');
+          isValid = false;
+        }
+
+        if (!isValidEmail(emailInput.value)) {
+          emailError.classList.remove('hidden');
+          isValid = false;
+        }
+
+        if (passwordInput.value.length < 8) {
+          passwordError.classList.remove('hidden');
+          isValid = false;
+        }
+
+        if (!isValid) return;
+
+        // Call global auth function from script.js
+        await signUpWithEmail(emailInput.value, passwordInput.value, nameInput.value.trim());
+      }
+
+      // Sign In Handler
+      async function handleSignIn(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        const emailInput = document.querySelector('input[name="email"]');
+        const passwordInput = document.querySelector('input[name="password"]');
+        const emailError = document.getElementById('email-error');
+        const passwordError = document.getElementById('password-error');
+
+        // Reset errors
+        [emailError, passwordError].forEach(el => el && el.classList.add('hidden'));
+
+        let isValid = true;
+
+        if (!isValidEmail(emailInput.value)) {
+          emailError.classList.remove('hidden');
+          isValid = false;
+        }
+
+        if (passwordInput.value.length < 8) {
+          passwordError.classList.remove('hidden');
+          isValid = false;
+        }
+
+        if (!isValid) return;
+
+        // Call global auth function from script.js
+        await signInWithEmail(emailInput.value, passwordInput.value);
+      }
+
+      // Forgot Password Handler
+      const forgotLink = document.getElementById('forgot-password-link');
+      if (forgotLink) {
+        forgotLink.addEventListener('click', async (e) => {
+          e.preventDefault();
+          const emailInput = document.querySelector('input[name="email"]');
+          const email = (emailInput?.value || '').trim();
+          if (!email || !isValidEmail(email)) {
+            const emailError = document.getElementById('email-error');
+            if (emailError) {
+              emailError.textContent = 'Please enter your email above to reset your password.';
+              emailError.classList.remove('hidden');
+            }
+            return;
+          }
+          try {
+            showLoading(true, 'Sending password reset link...');
+            const fb = await initFirebase();
+            if (fb) {
+              await fb.auth.sendPasswordResetEmail(email);
+              showLoading(false);
+              showNotification(`Password reset email sent to ${email}!`, 'success', 6000);
+            } else {
+              showLoading(false);
+              showNotification(`Password reset simulated for ${email}.`, 'info', 5000);
+            }
+          } catch (err) {
+            showLoading(false);
+            showNotification(err.message || 'Could not send reset email.', 'error');
+          }
+        });
+      }
+
+      // Form Submit binding
+      const authForm = document.getElementById('auth-form');
+      if (authForm) {
+        authForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          if (isSignUp) {
+            handleSignUp(e);
+          } else {
+            handleSignIn(e);
+          }
+        });
+      }
+
+      // Tab switching
+      document.getElementById('tab-signup')?.addEventListener('click', () => switchAuthTab('signup'));
+      document.getElementById('tab-login')?.addEventListener('click', () => switchAuthTab('login'));
+
+      // Init tab underline width
+      const tabSignup = document.getElementById('tab-signup');
+      const underline = document.getElementById('tab-underline');
+      if (tabSignup && underline) {
+        underline.style.width = tabSignup.offsetWidth + 'px';
+      }
+    });
+  </script>
+</body>
+</html>
