@@ -608,12 +608,13 @@
           <div class="relative z-10 flex flex-col sm:flex-row lg:flex-col gap-3 min-w-[280px]">
             <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-inner">
               <div>
-                <span class="text-xs font-extrabold text-purple-300 uppercase tracking-wider block">Bedrock Model</span>
+                <span class="text-xs font-extrabold text-purple-300 uppercase tracking-wider block">AI Advisor Engine</span>
                 <select id="ai-model-select" class="bg-transparent text-white font-black text-sm outline-none cursor-pointer mt-0.5">
-                  <option value="claude-opus-5" class="text-gray-900" selected>Claude Opus 5 (Bedrock Playground)</option>
-                  <option value="claude-3-5-sonnet" class="text-gray-900">Claude 3.5 Sonnet (Bedrock)</option>
-                  <option value="amazon-nova" class="text-gray-900">Amazon Nova Pro</option>
-                  <option value="claude-3-haiku" class="text-gray-900">Claude 3 Haiku</option>
+                  <option value="openrouter/gpt-4o-mini" class="text-gray-900" selected>OpenRouter - GPT-4o Mini (Live Active)</option>
+                  <option value="openrouter/auto" class="text-gray-900">OpenRouter - Smart Auto Advisor</option>
+                  <option value="claude-opus-5" class="text-gray-900">AWS Bedrock - Claude Opus 5</option>
+                  <option value="claude-3-5-sonnet" class="text-gray-900">AWS Bedrock - Claude 3.5 Sonnet</option>
+                  <option value="amazon-nova" class="text-gray-900">AWS Bedrock - Amazon Nova Pro</option>
                 </select>
               </div>
               <span class="material-symbols-outlined text-purple-300 text-[32px]">tune</span>
@@ -1868,14 +1869,14 @@
           </div>
           <div class="bg-white border border-gray-200 p-5 rounded-3xl shadow-sm flex items-center gap-3">
             <div class="w-5 h-5 border-3 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
-            <span class="text-sm font-black text-gray-600">AWS Bedrock is computing exact ₹ metrics & generating strategy...</span>
+            <span class="text-sm font-black text-gray-600">Optigoal AI Engine is computing exact ₹ metrics & generating strategy...</span>
           </div>
         </div>
       `;
       chatHistory.insertAdjacentHTML('beforeend', loadingHtml);
       chatHistory.scrollTop = chatHistory.scrollHeight;
 
-      if (statusIndicator) statusIndicator.textContent = 'Processing with Bedrock Converse API...';
+      if (statusIndicator) statusIndicator.textContent = 'Consulting AI Financial Advisor...';
       if (submitBtn) submitBtn.disabled = true;
       if (auditBtn) auditBtn.disabled = true;
 

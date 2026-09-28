@@ -201,6 +201,81 @@ def call_bedrock_converse(client, model_id, system_prompt, user_message):
 
 
 # -------------------------------------------------------------
+# 2B. OPENROUTER CHATBOT & ADVISOR INVOCATION
+# -------------------------------------------------------------
+def call_openrouter(model_id, system_prompt, user_message, max_tokens=200):
+    """
+    Invokes OpenRouter API for the AI Advisor / Chatbot.
+    Supports gpt-4o-mini, claude, llama, etc.
+    Dynamically adapts max_tokens to credit balance to prevent 402 errors.
+    """
+    openrouter_key = os.environ.get('OPENROUTER_API_KEY', '').strip()
+    if not openrouter_key:
+        return None, "OPENROUTER_API_KEY not set"
+
+    model_map = {
+        "openrouter/auto": "openai/gpt-4o-mini",
+        "openrouter/gpt-4o-mini": "openai/gpt-4o-mini",
+        "openrouter/claude-3-5-sonnet": "openai/gpt-4o-mini",
+        "claude-opus-5": "openai/gpt-4o-mini",
+        "gpt-4o-mini": "openai/gpt-4o-mini",
+    }
+    actual_model = model_map.get(model_id, model_id.replace('openrouter/', ''))
+    if '/' not in actual_model:
+        actual_model = f"openai/{actual_model}"
+
+    url = 'https://openrouter.ai/api/v1/chat/completions'
+    headers = {
+        'Authorization': f'Bearer {openrouter_key}',
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://github.com/dilipkumardit06-source/RIT-hackathon',
+        'X-Title': 'Optigoal Engine'
+    }
+
+    payload = {
+        'model': actual_model,
+        'max_tokens': max_tokens,
+        'messages': [
+            {'role': 'system', 'content': system_prompt},
+            {'role': 'user', 'content': user_message}
+        ]
+    }
+
+    try:
+        req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            data = json.loads(resp.read().decode('utf-8'))
+            choices = data.get('choices', [])
+            if choices and 'message' in choices[0]:
+                content = choices[0]['message'].get('content', '')
+                if content:
+                    return content, actual_model
+    except urllib.error.HTTPError as e:
+        err_body = e.read().decode('utf-8', errors='ignore')
+        print(f"[OpenRouter HTTP {e.code}] {err_body[:200]}")
+        import re
+        afford_match = re.search(r'can only afford (\d+)', err_body)
+        if afford_match:
+            afforded = int(afford_match.group(1))
+            adjusted_tokens = max(60, afforded - 10)
+            try:
+                payload['model'] = 'openai/gpt-4o-mini'
+                payload['max_tokens'] = adjusted_tokens
+                req_adj = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
+                with urllib.request.urlopen(req_adj, timeout=20) as resp_adj:
+                    data_adj = json.loads(resp_adj.read().decode('utf-8'))
+                    choices_adj = data_adj.get('choices', [])
+                    if choices_adj and 'message' in choices_adj[0]:
+                        return choices_adj[0]['message'].get('content', ''), 'openai/gpt-4o-mini'
+            except Exception as e_adj:
+                print(f"[OpenRouter Adaptive Token Error] {e_adj}")
+    except Exception as e:
+        print(f"[OpenRouter Error] {e}")
+
+    return None, actual_model
+
+
+# -------------------------------------------------------------
 # 3. HIGH-PRECISION DETERMINISTIC STRATEGY (BEDROCK FALLBACK)
 # -------------------------------------------------------------
 def generate_heuristic_strategy(metrics, user_query):
@@ -349,42 +424,58 @@ class OptigoalServerHandler(http.server.SimpleHTTPRequestHandler):
         # 1. Step 1: Compute deterministic exact mathematics (₹)
         metrics = compute_financial_metrics(profile, goals)
 
-        # 2. Step 2: Attempt AWS Bedrock Converse API invocation
-        bedrock_client = get_bedrock_client()
-        bedrock_result = None
+        # 2. Step 2: Attempt AI Invocations (OpenRouter / AWS Bedrock)
+        system_prompt = (
+            "You are the Optigoal AI Strategic Financial Advisor.\n"
+            "You assist users in optimizing budgets, goals, and wealth timelines in Indian Rupees (₹).\n\n"
+            "BEDROCK & OPENROUTER GUARDRAILS (ZERO HALLUCINATION POLICY):\n"
+            "1. You MUST strictly use the pre-computed exact figures supplied in the context.\n"
+            "2. Do NOT invent, recalculate, or contradict these numbers.\n"
+            "3. Apply standard heuristics: 50/30/20 rule, emergency reserve = 6 months of expenses, debt avalanche/snowball.\n"
+            "4. Structure response with Markdown headers, bullet points, and concrete actionable suggestions."
+        )
+
+        context_message = (
+            f"--- USER FINANCIAL PROFILE & EXACT MATH (₹) ---\n"
+            f"{json.dumps(metrics, indent=2)}\n\n"
+            f"--- USER QUERY ---\n"
+            f"{user_prompt}"
+        )
+
+        ai_result = None
+        provider_name = None
         actual_model_used = None
 
-        if bedrock_client:
-            # Construct Schema & Context with Bedrock Guardrails
-            system_prompt = (
-                "You are the Optigoal AI Strategic Financial Advisor powered by AWS Bedrock.\n"
-                "You assist users in optimizing budgets, goals, and wealth timelines in Indian Rupees (₹).\n\n"
-                "BEDROCK GUARDRAILS (ZERO HALLUCINATION POLICY):\n"
-                "1. You MUST strictly use the pre-computed exact figures supplied in the context.\n"
-                "2. Do NOT invent, recalculate, or contradict these numbers.\n"
-                "3. Apply standard heuristics: 50/30/20 rule, emergency reserve = 6 months of expenses, debt avalanche/snowball.\n"
-                "4. Structure response with Markdown headers, bullet points, and concrete actionable suggestions."
-            )
+        # Check if user specifically requested OpenRouter or if OpenRouter is selected
+        if 'openrouter' in model_choice.lower() or model_choice in ['gpt-4o-mini', 'openrouter/gpt-4o-mini']:
+            ai_result, actual_model_used = call_openrouter(model_choice, system_prompt, context_message)
+            if ai_result:
+                provider_name = f"OpenRouter ({actual_model_used})"
 
-            context_message = (
-                f"--- USER FINANCIAL PROFILE & EXACT MATH (₹) ---\n"
-                f"{json.dumps(metrics, indent=2)}\n\n"
-                f"--- USER QUERY ---\n"
-                f"{user_prompt}"
-            )
+        # If not answered yet, attempt AWS Bedrock Converse API invocation
+        if not ai_result:
+            bedrock_client = get_bedrock_client()
+            if bedrock_client:
+                ai_result, actual_model_used = call_bedrock_converse(
+                    bedrock_client, model_choice, system_prompt, context_message
+                )
+                if ai_result:
+                    provider_name = f"AWS Bedrock ({model_choice})"
 
-            bedrock_result, actual_model_used = call_bedrock_converse(
-                bedrock_client, model_choice, system_prompt, context_message
-            )
+        # If Bedrock didn't succeed (e.g., Anthropic use-case pending), seamlessly use OpenRouter
+        if not ai_result and os.environ.get('OPENROUTER_API_KEY'):
+            ai_result, actual_model_used = call_openrouter('openai/gpt-4o-mini', system_prompt, context_message)
+            if ai_result:
+                provider_name = f"OpenRouter ({actual_model_used})"
 
         # 3. Step 3: Response Assembly
-        if bedrock_result:
+        if ai_result:
             response_payload = {
                 "success": True,
-                "provider": f"AWS Bedrock ({model_choice})",
+                "provider": provider_name,
                 "model": actual_model_used,
                 "metrics": metrics,
-                "advice": bedrock_result,
+                "advice": ai_result,
                 "guardrails_active": True,
                 "timestamp": datetime.now().isoformat()
             }
