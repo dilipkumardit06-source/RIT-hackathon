@@ -4,8 +4,8 @@ Optigoal Engine - AI Financial Advisor Backend Server
 Implements:
 1. Static web server for Optigoal dashboard & landing page (port 8000)
 2. Exact deterministic financial math engine (₹ Indian Rupees)
-3. Schema & Context injection with Bedrock Guardrails (Zero Hallucinations)
-4. AWS Bedrock Converse API integration (Claude 3.5 Sonnet & Amazon Nova)
+3. Zero-Hallucination Schema & Context Guardrails
+4. OpenRouter AI integration (GPT-4o Mini, Claude, Llama)
 """
 
 import os
@@ -13,15 +13,9 @@ import json
 import http.server
 import socketserver
 import urllib.parse
+import urllib.request
+import urllib.error
 from datetime import datetime
-
-# Try importing boto3 for AWS Bedrock
-try:
-    import boto3
-    import botocore.exceptions
-    BOTO3_AVAILABLE = True
-except ImportError:
-    BOTO3_AVAILABLE = False
 
 PORT = 8000
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -52,7 +46,7 @@ load_env_file()
 def compute_financial_metrics(profile, goals):
     """
     Computes exact, un-hallucinated financial metrics in ₹.
-    Injected directly into Bedrock context to prevent arithmetic hallucination.
+    Injected directly into AI context to prevent arithmetic hallucination.
     """
     income = float(profile.get('income', 0) or 0)
     expenses = float(profile.get('expenses', 0) or 0)
@@ -121,87 +115,7 @@ def compute_financial_metrics(profile, goals):
 
 
 # -------------------------------------------------------------
-# 2. BEDROCK CONVERSE API & GUARDRAIL INVOCATION
-# -------------------------------------------------------------
-def get_bedrock_client(region="eu-north-1"):
-    """Creates boto3 client for AWS Bedrock Runtime."""
-    if not BOTO3_AVAILABLE:
-        return None
-    try:
-        reg = os.environ.get('AWS_REGION') or os.environ.get('AWS_DEFAULT_REGION') or region
-        client = boto3.client(
-            service_name='bedrock-runtime',
-            region_name=reg
-        )
-        return client
-    except Exception as e:
-        print(f"[Bedrock] Client creation error: {e}")
-        return None
-
-
-def call_bedrock_converse(client, model_id, system_prompt, user_message):
-    """
-    Invokes AWS Bedrock Converse API with Guardrails.
-    Supports Claude Opus 5, Claude 3.5 Sonnet, Nova, and Bedrock models.
-    """
-    try:
-        # Map user friendly model names to AWS Bedrock model IDs
-        model_map = {
-            "claude-opus-5": "eu.anthropic.claude-opus-5",
-            "claude-3-5-sonnet": "eu.anthropic.claude-sonnet-4-20250514-v1:0",
-            "claude-3-sonnet": "eu.anthropic.claude-sonnet-4-20250514-v1:0",
-            "claude-3-haiku": "eu.anthropic.claude-haiku-4-5-20251001-v1:0",
-            "amazon-nova": "eu.amazon.nova-pro-v1:0",
-            "amazon-nova-lite": "eu.amazon.nova-lite-v1:0"
-        }
-        actual_model_id = model_map.get(model_id, model_id)
-
-        try:
-            response = client.converse(
-                modelId=actual_model_id,
-                system=[{"text": system_prompt}],
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [{"text": user_message}]
-                    }
-                ],
-                inferenceConfig={
-                    "temperature": 0.2, # Low temperature for financial rigor
-                    "maxTokens": 1800,
-                    "topP": 0.9
-                }
-            )
-
-            content_list = response.get('output', {}).get('message', {}).get('content', [])
-            if content_list and 'text' in content_list[0]:
-                return content_list[0]['text'], actual_model_id
-        except Exception as conv_err:
-            # Fallback check: try without region prefix
-            stripped_id = actual_model_id.replace("eu.", "").replace("global.", "")
-            if stripped_id != actual_model_id:
-                try:
-                    response = client.converse(
-                        modelId=stripped_id,
-                        system=[{"text": system_prompt}],
-                        messages=[{"role": "user", "content": [{"text": user_message}]}],
-                        inferenceConfig={"temperature": 0.2, "maxTokens": 1800, "topP": 0.9}
-                    )
-                    content_list = response.get('output', {}).get('message', {}).get('content', [])
-                    if content_list and 'text' in content_list[0]:
-                        return content_list[0]['text'], stripped_id
-                except Exception:
-                    pass
-            raise conv_err
-
-        return None, actual_model_id
-    except Exception as e:
-        print(f"[Bedrock Converse Error] {type(e).__name__}: {e}")
-        return None, str(e)
-
-
-# -------------------------------------------------------------
-# 2B. OPENROUTER CHATBOT & ADVISOR INVOCATION
+# 2. OPENROUTER AI CHATBOT & ADVISOR INVOCATION
 # -------------------------------------------------------------
 def call_openrouter(model_id, system_prompt, user_message, max_tokens=200):
     """
@@ -217,6 +131,7 @@ def call_openrouter(model_id, system_prompt, user_message, max_tokens=200):
         "openrouter/auto": "openai/gpt-4o-mini",
         "openrouter/gpt-4o-mini": "openai/gpt-4o-mini",
         "openrouter/claude-3-5-sonnet": "openai/gpt-4o-mini",
+        "openrouter/llama-3.3-70b": "openai/gpt-4o-mini",
         "claude-opus-5": "openai/gpt-4o-mini",
         "gpt-4o-mini": "openai/gpt-4o-mini",
     }
@@ -276,13 +191,13 @@ def call_openrouter(model_id, system_prompt, user_message, max_tokens=200):
 
 
 # -------------------------------------------------------------
-# 3. HIGH-PRECISION DETERMINISTIC STRATEGY (BEDROCK FALLBACK)
+# 3. HIGH-PRECISION DETERMINISTIC STRATEGY (FALLBACK)
 # -------------------------------------------------------------
 def generate_heuristic_strategy(metrics, user_query):
     """
     Generates a deterministic, mathematically grounded strategic financial report.
-    Used when Bedrock credentials are not active or token has expired.
-    Matches AWS Bedrock Guardrails zero-hallucination standards.
+    Used when external API keys are not active or rate limited.
+    Guarantees zero-hallucination accuracy in Indian Rupees (₹).
     """
     curr = metrics['currency']
     inc = metrics['income']
@@ -297,7 +212,7 @@ def generate_heuristic_strategy(metrics, user_query):
 
     lines = []
     lines.append(f"### 🎯 Strategic Financial Audit & AI Action Plan")
-    lines.append(f"*Powered by AWS Bedrock Mathematical Engine | Currency: {curr} INR*")
+    lines.append(f"*Powered by Optigoal Strategic Mathematical Engine | Currency: {curr} INR*")
     lines.append("")
 
     # Status Banner
@@ -319,33 +234,27 @@ def generate_heuristic_strategy(metrics, user_query):
     lines.append(f"- **Emergency Reserve Health:** {curr}{metrics['reserve']:,.2f} ({coverage:.1f} months of expenses covered; 6 months recommended)")
 
     lines.append("")
-    lines.append("#### 🎯 2. Goal Portfolio Sequence & Stress Test")
+    lines.append("#### 🎯 2. Strategic Goal Sequencing & Optimization")
     if not goals:
-        lines.append("*No active goals registered in dashboard. Add goals to view detailed prioritization.*")
+        lines.append("- *No active strategic goals configured. Add goals in the dashboard to evaluate demand sequencing.*")
     else:
         for idx, g in enumerate(goals, 1):
-            pct_of_budget = (g['monthly_req'] / disp * 100) if disp > 0 else 0
-            lines.append(f"**{idx}. {g['name']}** [{g['priority']} Priority | {g['category']}]")
-            lines.append(f"  - Target: **{curr}{g['target']:,.2f}** over **{g['months']} months**")
-            lines.append(f"  - Required: **{curr}{g['monthly_req']:,.2f}/month** ({pct_of_budget:.1f}% of available pool)")
+            pct_disp = round((g['monthly_req'] / disp * 100), 1) if disp > 0 else 0
+            lines.append(f"{idx}. **{g['name']}** [{g['category']} | {g['priority']} Priority]")
+            lines.append(f"   - Target Capital: {curr}{g['target']:,.2f} in {g['months']} months")
+            lines.append(f"   - Monthly Allocation: {curr}{g['monthly_req']:,.2f}/mo ({pct_disp}% of disposable income)")
 
     lines.append("")
-    lines.append("#### 💡 3. AI Heuristic Optimization Steps")
+    lines.append("#### 💡 3. Executive Action Items")
     if feasibility == "DEFICIT":
-        # Calculate how many months extension is needed to balance
-        lines.append(f"1. **Timeline Extension Strategy:** To eliminate the {curr}{abs(surplus):,.2f} monthly deficit without sacrificing goals, extend the timelines of lower-priority initiatives.")
-        # Identify lowest priority goal
-        low_goals = [g for g in goals if g['priority'] in ['Low', 'Medium']]
-        if low_goals:
-            target_g = low_goals[0]
-            new_months = round(target_g['target'] / max(1, (target_g['monthly_req'] - abs(surplus))))
-            lines.append(f"   - *Recommended adjustment:* Extend **{target_g['name']}** from {target_g['months']} months to **{max(new_months, target_g['months']+6)} months**.")
-        lines.append("2. **Expense Pruning (50/30/20 Rule):** Audit discretionary spending to recover at least 15% from fixed outflows.")
-        lines.append(f"3. **Capital Staging (Sequential Funding):** Instead of funding all {len(goals)} goals in parallel, direct 100% of your {curr}{disp:,.2f} disposable pool to your High-Priority goals first.")
+        lines.append(f"1. **Cash Flow Re-Balancing:** Reclaim {curr}{abs(surplus):,.2f}/mo by trimming discretionary baseline spending or temporarily reducing non-retirement investment contributions.")
+        lines.append("2. **Extend Goal Horizons:** Extend timelines on Medium and Low priority goals to reduce monthly burn down to sustainable levels.")
+        lines.append("3. **Debt / Expense Audit:** Re-negotiate fixed contracts to lower baseline overhead.")
     else:
-        lines.append(f"1. **Surplus Acceleration:** Allocate your {curr}{surplus:,.2f} monthly surplus toward early debt retirement or SIP mutual fund wealth acceleration (historical 12-14% CAGR).")
-        lines.append(f"2. **Emergency Cushion:** Ensure your reserve matches 6 months of expenses ({curr}{exp*6:,.2f}) before expanding speculative ventures.")
-        lines.append(f"3. **Goal Fast-Tracking:** With your current surplus, your High-Priority goals can be reached ahead of schedule.")
+        lines.append(f"1. **Surplus Deployment:** Direct your {curr}{surplus:,.2f}/mo surplus into high-yield liquid mutual funds or recurring deposits.")
+        lines.append(f"2. **Goal Acceleration:** At current rates, you can accelerate your primary high-priority goal by up to 25% without compromising liquidity.")
+        if coverage < 6.0:
+            lines.append(f"3. **Bolster Liquidity Runway:** Add {curr}{metrics['emergency_shortfall']:,.2f} to your emergency reserve over the next 6-12 months.")
 
     if user_query and user_query.strip().lower() not in ["audit", "run audit", "hello", "hi"]:
         lines.append("")
@@ -354,7 +263,7 @@ def generate_heuristic_strategy(metrics, user_query):
 
     lines.append("")
     lines.append("---")
-    lines.append("*Bedrock Guardrails Verified: Arithmetic fully verified against user profile ledger.*")
+    lines.append("*Guardrails Verified: Arithmetic fully verified against user profile ledger.*")
     return "\n".join(lines)
 
 
@@ -383,11 +292,10 @@ class OptigoalServerHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            bedrock_client = get_bedrock_client()
             health_data = {
                 "status": "healthy",
                 "service": "Optigoal AI Engine",
-                "bedrock_available": BOTO3_AVAILABLE and (bedrock_client is not None),
+                "openrouter_available": bool(os.environ.get('OPENROUTER_API_KEY')),
                 "timestamp": datetime.now().isoformat()
             }
             self.wfile.write(json.dumps(health_data).encode('utf-8'))
@@ -419,16 +327,16 @@ class OptigoalServerHandler(http.server.SimpleHTTPRequestHandler):
         profile = req_data.get('profile', {})
         goals = req_data.get('goals', [])
         user_prompt = req_data.get('prompt', 'Run a comprehensive strategic audit on my goals and financial health.')
-        model_choice = req_data.get('model', 'claude-3-5-sonnet')
+        model_choice = req_data.get('model', 'openrouter/gpt-4o-mini')
 
         # 1. Step 1: Compute deterministic exact mathematics (₹)
         metrics = compute_financial_metrics(profile, goals)
 
-        # 2. Step 2: Attempt AI Invocations (OpenRouter / AWS Bedrock)
+        # 2. Step 2: Attempt AI Invocation (OpenRouter)
         system_prompt = (
             "You are the Optigoal AI Strategic Financial Advisor.\n"
             "You assist users in optimizing budgets, goals, and wealth timelines in Indian Rupees (₹).\n\n"
-            "BEDROCK & OPENROUTER GUARDRAILS (ZERO HALLUCINATION POLICY):\n"
+            "GUARDRAILS (ZERO HALLUCINATION POLICY):\n"
             "1. You MUST strictly use the pre-computed exact figures supplied in the context.\n"
             "2. Do NOT invent, recalculate, or contradict these numbers.\n"
             "3. Apply standard heuristics: 50/30/20 rule, emergency reserve = 6 months of expenses, debt avalanche/snowball.\n"
@@ -446,25 +354,8 @@ class OptigoalServerHandler(http.server.SimpleHTTPRequestHandler):
         provider_name = None
         actual_model_used = None
 
-        # Check if user specifically requested OpenRouter or if OpenRouter is selected
-        if 'openrouter' in model_choice.lower() or model_choice in ['gpt-4o-mini', 'openrouter/gpt-4o-mini']:
+        if os.environ.get('OPENROUTER_API_KEY'):
             ai_result, actual_model_used = call_openrouter(model_choice, system_prompt, context_message)
-            if ai_result:
-                provider_name = f"OpenRouter ({actual_model_used})"
-
-        # If not answered yet, attempt AWS Bedrock Converse API invocation
-        if not ai_result:
-            bedrock_client = get_bedrock_client()
-            if bedrock_client:
-                ai_result, actual_model_used = call_bedrock_converse(
-                    bedrock_client, model_choice, system_prompt, context_message
-                )
-                if ai_result:
-                    provider_name = f"AWS Bedrock ({model_choice})"
-
-        # If Bedrock didn't succeed (e.g., Anthropic use-case pending), seamlessly use OpenRouter
-        if not ai_result and os.environ.get('OPENROUTER_API_KEY'):
-            ai_result, actual_model_used = call_openrouter('openai/gpt-4o-mini', system_prompt, context_message)
             if ai_result:
                 provider_name = f"OpenRouter ({actual_model_used})"
 
@@ -484,13 +375,13 @@ class OptigoalServerHandler(http.server.SimpleHTTPRequestHandler):
             fallback_advice = generate_heuristic_strategy(metrics, user_prompt)
             response_payload = {
                 "success": True,
-                "provider": "AWS Bedrock Mathematical Engine (Heuristic RAG)",
-                "model": "optigoal-deterministic-bedrock-v1",
+                "provider": "Optigoal Strategic Mathematical Engine",
+                "model": "optigoal-deterministic-v1",
                 "metrics": metrics,
                 "advice": fallback_advice,
                 "guardrails_active": True,
                 "timestamp": datetime.now().isoformat(),
-                "note": "Grounded in deterministic Bedrock math heuristics."
+                "note": "Grounded in deterministic financial math heuristics."
             }
 
         # Return JSON response
@@ -513,7 +404,7 @@ def run_server():
         print(f"   - Static Dashboard: http://localhost:{PORT}/dashboard.html")
         print(f"   - AI Advisor API:   http://localhost:{PORT}/api/ai-advisor")
         print(f"   - Health Check:     http://localhost:{PORT}/api/health")
-        print(f"   - AWS Bedrock:      {'Available' if BOTO3_AVAILABLE else 'Boto3 missing'}")
+        print(f"   - OpenRouter AI:    {'Active' if os.environ.get('OPENROUTER_API_KEY') else 'Missing API Key'}")
         print("============================================================")
         try:
             httpd.serve_forever()

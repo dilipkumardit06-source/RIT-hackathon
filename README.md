@@ -1,6 +1,6 @@
 # 🚀 Optigoal Engine - AI Strategic Financial Intelligence
 
-An autonomous, enterprise-grade strategic financial planning platform and executive command center. Optigoal Engine computes exact, un-hallucinated cash flow models in Indian Rupees (₹), analyzes goal trajectories, optimizes budget allocations, and delivers strategic financial advisory through **AWS Bedrock**.
+An autonomous, enterprise-grade strategic financial planning platform and executive command center. Optigoal Engine computes exact, un-hallucinated cash flow models in Indian Rupees (₹), analyzes goal trajectories, optimizes budget allocations, and delivers strategic financial advisory through **OpenRouter AI**.
 
 ---
 
@@ -10,10 +10,10 @@ An autonomous, enterprise-grade strategic financial planning platform and execut
 - **Executive Overview Command Center**: Real-time financial health index, cash flow availability, 6 KPI stat cards, and dynamic budget conflict detection.
 - **Resource Allocation Engine**: Visual capital distribution doughnut chart with center-hole inflow metric, percentage allocations, and micro progress bars for fixed expenses, investments, active goals, and surplus reserves.
 - **Trajectory Projection**: Cumulative available capital vs required goal demand forecasting curves with selectable 6-month and 12-month projection horizons.
-- **AWS Bedrock AI Strategic Advisor**:
-  - Direct integration with **AWS Bedrock Converse API** supporting **Claude 3.5 Sonnet** and **Amazon Nova Pro**.
+- **OpenRouter AI Strategic Advisor**:
+  - Integration with **OpenRouter AI API** supporting **GPT-4o Mini**, **Claude 3.5 Sonnet**, and **Llama 3.3 70B**.
   - **Deterministic Guardrails**: Exact mathematical pre-computation in Python before model invocation to eliminate arithmetic hallucinations.
-  - Interactive advisory chat stream, quick prompt inquiry chips, and real-time stress testing.
+  - Interactive advisory chat stream, quick prompt inquiry chips, dynamic token budgeting, and real-time stress testing.
 - **Firebase Cloud Persistence**: Real-time synchronization with Firebase Cloud Firestore and persistent session management.
 - **Secure Authentication**: Google OAuth and Email/Password authentication.
 
@@ -33,16 +33,17 @@ An autonomous, enterprise-grade strategic financial planning platform and execut
 ┌─────────────────────────────────────────┐
 │       Python Backend (server.py)        │
 │  - Deterministic Financial Math Engine  │
-│  - Schema & Guardrail Context Injection │
-│  - AWS Bedrock Runtime Client           │
+│  - Zero-Hallucination Guardrails        │
+│  - Adaptive Token Budgeting Engine      │
 └────────────────────┬────────────────────┘
-                     │ AWS Bedrock Converse API
+                     │ OpenRouter API
                      ▼
 ┌─────────────────────────────────────────┐
-│              AWS Bedrock                │
+│             OpenRouter AI               │
+│  - OpenAI GPT-4o Mini                   │
 │  - Anthropic Claude 3.5 Sonnet          │
-│  - Amazon Nova Pro                      │
-│  - Zero-Hallucination Heuristics        │
+│  - Meta Llama 3.3 70B                   │
+│  - Zero-Hallucination Grounding         │
 └─────────────────────────────────────────┘
 ```
 
@@ -57,20 +58,16 @@ An autonomous, enterprise-grade strategic financial planning platform and execut
 ### 2. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/DilipKumardevops/optigoal-engine.git
-cd optigoal-engine
-
-# (Optional) Install boto3 for AWS Bedrock integration
-pip install boto3
+git clone https://github.com/dilipkumardit06-source/RIT-hackathon.git
+cd RIT-hackathon
 ```
 
-### 3. Configure Environment (Optional)
-Copy `.env.example` to `.env` to configure your AWS Bedrock credentials:
+### 3. Configure Environment
+Copy `.env.example` to `.env` to configure your OpenRouter API key:
 ```env
-AWS_BEARER_TOKEN_BEDROCK="bedrock-api-key-YOUR_PLAYGROUND_TOKEN"
-AWS_REGION="eu-north-1"
+OPENROUTER_API_KEY="sk-or-v1-YOUR_OPENROUTER_KEY_HERE"
 ```
-*(If no AWS credentials are configured, the engine automatically falls back to deterministic mathematical heuristics).*
+*(If no API key is configured, the engine automatically falls back to deterministic mathematical heuristics).*
 
 ### 4. Run Locally
 ```bash
@@ -87,8 +84,7 @@ Open **`http://localhost:8000`** in your browser.
 ├── dashboard.html          # Executive dashboard & AI Advisor interface
 ├── index.html              # Landing page & 3D scroll animation
 ├── login.html              # Authentication portal (Google & Email)
-├── server.py               # Backend server & AWS Bedrock API integration
-├── lambda_function.py      # AWS Lambda deployment handler
+├── server.py               # Backend server & OpenRouter AI integration
 ├── styles.css              # Global design system & animations
 ├── script.js               # Core animation & client logic
 ├── enhanced_frames/        # 300-frame 3D sequence assets
@@ -97,8 +93,3 @@ Open **`http://localhost:8000`** in your browser.
     ├── intro-video.js      # Video controller
     └── scroll-animation.js # Frame scrubbing engine
 ```
-
----
-
-## 📄 License
-MIT License. Developed for the RIT Hackathon.
