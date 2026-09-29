@@ -114,6 +114,12 @@
         <span id="cloud-sync-text">Cloud Synced</span>
       </div>
 
+      <!-- Razorpay Pro Upgrade Button -->
+      <button onclick="openSubscriptionModal()" id="btn-header-upgrade" class="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-black shadow-md shadow-purple-500/20 transition-all cursor-pointer transform hover:-translate-y-0.5" title="Upgrade to Optigoal Pro Engine with Razorpay">
+        <span class="material-symbols-outlined text-[20px] text-amber-300">workspace_premium</span>
+        <span id="header-plan-badge-text">Upgrade Pro (₹99/mo)</span>
+      </button>
+
       <div class="hidden sm:flex items-center gap-2.5 px-4 py-2 rounded-full bg-blue-50 text-base font-black text-blue-700 border border-blue-200 shadow-sm">
         <span class="w-3 h-3 rounded-full bg-blue-500 animate-pulse"></span>
         <span>Engine Active</span>
@@ -178,6 +184,21 @@
           </div>
         </button>
       </nav>
+
+      <!-- Sidebar Pro Upgrade Banner -->
+      <div id="sidebar-pro-banner" class="mx-5 mb-3 p-4 rounded-2xl bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-800 text-white shadow-lg relative overflow-hidden">
+        <div class="relative z-10">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[10px] font-black uppercase tracking-widest bg-amber-400 text-purple-950 px-2 py-0.5 rounded-full">SPECIAL</span>
+            <span class="text-xs font-black text-purple-200">From ₹99/mo</span>
+          </div>
+          <h5 class="text-sm font-black leading-tight">Optigoal Pro Engine</h5>
+          <p class="text-[11px] text-purple-200 mt-1">Unlimited AI Audits & 12-Month Horizon Analysis.</p>
+          <button onclick="openSubscriptionModal()" class="mt-3 w-full py-2 bg-white hover:bg-purple-50 text-purple-900 font-black text-xs rounded-xl shadow-sm transition-all cursor-pointer">
+            Upgrade Plan
+          </button>
+        </div>
+      </div>
 
       <!-- Sidebar Bottom: Financial Health Gauge -->
       <div class="p-6 border-t border-gray-100 bg-gray-50/70">
@@ -1017,6 +1038,135 @@
       <p id="lightbox-caption" class="text-white font-bold text-sm mt-3 text-center"></p>
     </div>
   </div>
+
+  <!-- MODAL: UPGRADE & RAZORPAY SUBSCRIPTION CHECKOUT -->
+  <div id="modal-upgrade-subscription" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9997] hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl p-6 sm:p-10 max-w-xl w-full shadow-2xl border border-gray-100 transform transition-all my-8 max-h-[92vh] overflow-y-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-5 border-b border-gray-100">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-purple-500/20">
+            <span class="material-symbols-outlined text-[28px] text-amber-300">workspace_premium</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-2xl font-black text-gray-900 leading-tight">Optigoal Pro Engine</h3>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded-full">₹99 / mo</span>
+            </div>
+            <p class="text-xs font-bold text-gray-400 mt-0.5">Scale your goals with unlimited AI strategic audits</p>
+          </div>
+        </div>
+        <button onclick="closeSubscriptionModal()" class="w-10 h-10 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-700 flex items-center justify-center cursor-pointer transition-colors">
+          <span class="material-symbols-outlined text-[26px]">close</span>
+        </button>
+      </div>
+
+      <!-- Plan Features Highlights -->
+      <div class="grid grid-cols-2 gap-2 my-5 text-xs font-bold text-gray-700">
+        <div class="flex items-center gap-2 p-2 rounded-xl bg-purple-50/60 border border-purple-100">
+          <span class="material-symbols-outlined text-purple-600 text-[18px]">verified</span>
+          <span>Unlimited AI Audits</span>
+        </div>
+        <div class="flex items-center gap-2 p-2 rounded-xl bg-purple-50/60 border border-purple-100">
+          <span class="material-symbols-outlined text-purple-600 text-[18px]">verified</span>
+          <span>Deterministic ₹ Math</span>
+        </div>
+        <div class="flex items-center gap-2 p-2 rounded-xl bg-purple-50/60 border border-purple-100">
+          <span class="material-symbols-outlined text-purple-600 text-[18px]">verified</span>
+          <span>Multi-Media File Audits</span>
+        </div>
+        <div class="flex items-center gap-2 p-2 rounded-xl bg-purple-50/60 border border-purple-100">
+          <span class="material-symbols-outlined text-purple-600 text-[18px]">verified</span>
+          <span>Real-time Cloud Sync</span>
+        </div>
+      </div>
+
+      <!-- Duration Selection Radio Cards -->
+      <label class="block text-xs font-black uppercase tracking-wider text-gray-400 mb-2">Select Subscription Duration</label>
+      <div class="grid grid-cols-3 gap-3 mb-6">
+        
+        <!-- 1 Month Option -->
+        <label id="card-duration-1" class="duration-option-card cursor-pointer border-2 border-gray-200 hover:border-purple-400 rounded-2xl p-4 text-center transition-all flex flex-col justify-between">
+          <input type="radio" name="planDuration" value="1" class="sr-only" onchange="updatePaymentCalculation(1)">
+          <div>
+            <span class="block text-[11px] font-black text-gray-500 uppercase">1 Month</span>
+            <span class="block text-2xl font-black text-gray-900 mt-1">₹99</span>
+          </div>
+          <div class="mt-3 pt-2 border-t border-gray-100 text-[10px] font-bold text-gray-400">
+            1 × ₹99
+          </div>
+        </label>
+
+        <!-- 6 Months Option (Default) -->
+        <label id="card-duration-6" class="duration-option-card cursor-pointer border-2 border-purple-600 bg-purple-50/40 rounded-2xl p-4 text-center transition-all flex flex-col justify-between relative shadow-xs">
+          <span class="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">POPULAR</span>
+          <input type="radio" name="planDuration" value="6" class="sr-only" checked onchange="updatePaymentCalculation(6)">
+          <div>
+            <span class="block text-[11px] font-black text-purple-900 uppercase">6 Months</span>
+            <span class="block text-2xl font-black text-purple-700 mt-1">₹594</span>
+          </div>
+          <div class="mt-3 pt-2 border-t border-purple-200/50 text-[10px] font-black text-purple-700">
+            6 × ₹99
+          </div>
+        </label>
+
+        <!-- 12 Months Option -->
+        <label id="card-duration-12" class="duration-option-card cursor-pointer border-2 border-gray-200 hover:border-purple-400 rounded-2xl p-4 text-center transition-all flex flex-col justify-between relative">
+          <span class="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">ANNUAL</span>
+          <input type="radio" name="planDuration" value="12" class="sr-only" onchange="updatePaymentCalculation(12)">
+          <div>
+            <span class="block text-[11px] font-black text-gray-500 uppercase">12 Months</span>
+            <span class="block text-2xl font-black text-gray-900 mt-1">₹1,188</span>
+          </div>
+          <div class="mt-3 pt-2 border-t border-gray-100 text-[10px] font-bold text-gray-500">
+            12 × ₹99
+          </div>
+        </label>
+
+      </div>
+
+      <!-- Calculation Breakdown Ledger -->
+      <div class="bg-gray-50 rounded-2xl p-5 border border-gray-200 space-y-2.5 text-sm">
+        <div class="flex justify-between items-center text-gray-600 font-bold">
+          <span>Monthly Base Rate:</span>
+          <span>₹99 / month</span>
+        </div>
+        <div class="flex justify-between items-center text-gray-600 font-bold">
+          <span>Selected Billing Cycle:</span>
+          <span id="summary-duration-display" class="font-black text-gray-900">6 Months</span>
+        </div>
+        <div class="flex justify-between items-center text-gray-600 font-bold">
+          <span>Exact Calculation:</span>
+          <span id="summary-calc-display" class="font-black text-purple-700">6 months × ₹99 = ₹594</span>
+        </div>
+        <div class="h-px bg-gray-200 my-1"></div>
+        <div class="flex justify-between items-center text-base font-black text-gray-900">
+          <span>Total Amount Payable:</span>
+          <span id="summary-total-display" class="text-3xl font-black text-purple-700">₹594</span>
+        </div>
+      </div>
+
+      <!-- Payment Trigger Button -->
+      <button onclick="launchRazorpayCheckout()" id="btn-pay-razorpay" class="mt-6 w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-lg shadow-lg shadow-purple-500/30 flex items-center justify-center gap-2 cursor-pointer transition-all transform hover:-translate-y-0.5">
+        <span class="material-symbols-outlined text-[24px]">lock</span>
+        <span id="btn-pay-text">Pay ₹594 with Razorpay (UPI / Cards)</span>
+      </button>
+
+      <div class="flex items-center justify-center gap-3 mt-4 text-xs font-bold text-gray-400">
+        <span class="flex items-center gap-1">
+          <span class="material-symbols-outlined text-[16px] text-emerald-500">verified_user</span>
+          <span>256-bit SSL Razorpay Secure</span>
+        </span>
+        <span>•</span>
+        <span>UPI / Cards / NetBanking</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Razorpay Official Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
   <!-- Firebase SDK (Compat v10) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -2932,12 +3082,192 @@
       updateAiAdvisorMetrics();
     }
 
+    // ================= RAZORPAY PAYMENT GATEWAY INTEGRATION =================
+    const RAZORPAY_KEY_ID = window.RAZORPAY_KEY_ID || 'rzp_test_Thiy26DF9rXkv7';
+    const MONTHLY_BASE_PRICE = 99; // ₹99 / month
+    let selectedPlanMonths = 6;
+    let selectedPlanTotalAmount = 594; // 6 * 99
+
+    function updatePaymentCalculation(months) {
+      selectedPlanMonths = parseInt(months, 10);
+      selectedPlanTotalAmount = selectedPlanMonths * MONTHLY_BASE_PRICE;
+
+      // Update card active styles
+      [1, 6, 12].forEach(m => {
+        const card = document.getElementById(`card-duration-${m}`);
+        if (!card) return;
+        if (m === selectedPlanMonths) {
+          card.classList.add('border-purple-600', 'bg-purple-50/40', 'shadow-xs');
+          card.classList.remove('border-gray-200');
+          const radio = card.querySelector('input[type="radio"]');
+          if (radio) radio.checked = true;
+        } else {
+          card.classList.remove('border-purple-600', 'bg-purple-50/40', 'shadow-xs');
+          card.classList.add('border-gray-200');
+        }
+      });
+
+      const durText = `${selectedPlanMonths} Month${selectedPlanMonths > 1 ? 's' : ''}`;
+      const calcText = `${selectedPlanMonths} month${selectedPlanMonths > 1 ? 's' : ''} × ₹${MONTHLY_BASE_PRICE} = ₹${selectedPlanTotalAmount.toLocaleString('en-IN')}`;
+      const totalText = `₹${selectedPlanTotalAmount.toLocaleString('en-IN')}`;
+
+      const durEl = document.getElementById('summary-duration-display');
+      const calcEl = document.getElementById('summary-calc-display');
+      const totalEl = document.getElementById('summary-total-display');
+      const btnText = document.getElementById('btn-pay-text');
+
+      if (durEl) durEl.textContent = durText;
+      if (calcEl) calcEl.textContent = calcText;
+      if (totalEl) totalEl.textContent = totalText;
+      if (btnText) btnText.textContent = `Pay ${totalText} with Razorpay (UPI / Cards)`;
+    }
+
+    function openSubscriptionModal() {
+      const modal = document.getElementById('modal-upgrade-subscription');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        updatePaymentCalculation(selectedPlanMonths);
+      }
+    }
+
+    function closeSubscriptionModal() {
+      const modal = document.getElementById('modal-upgrade-subscription');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function launchRazorpayCheckout() {
+      if (typeof Razorpay === 'undefined') {
+        alert('Razorpay Checkout SDK is still loading. Please check your internet connection.');
+        return;
+      }
+
+      const user = JSON.parse(localStorage.getItem('optigoal_user') || '{}');
+      const amountInPaise = selectedPlanTotalAmount * 100; // Razorpay requires amount in paise
+
+      const options = {
+        key: RAZORPAY_KEY_ID,
+        amount: amountInPaise,
+        currency: "INR",
+        name: "Optigoal Engine",
+        description: `Pro Subscription (${selectedPlanMonths} Months Plan @ ₹${MONTHLY_BASE_PRICE}/mo)`,
+        image: "https://fintech-two-tau.vercel.app/logo.png",
+        handler: function (response) {
+          console.log("Razorpay Payment Success:", response);
+          handlePaymentSuccess(response.razorpay_payment_id);
+        },
+        prefill: {
+          name: user.displayName || "Dilip Kumar S",
+          email: user.email || "dilipkumar@optigoal.com",
+          contact: "8778110474"
+        },
+        notes: {
+          plan: `${selectedPlanMonths}_months`,
+          monthly_rate: "99_inr",
+          total_paid: `₹${selectedPlanTotalAmount}`
+        },
+        theme: {
+          color: "#7C3AED" // Purple brand accent
+        }
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.on('payment.failed', function (response) {
+        console.error("Razorpay Payment Failed:", response.error);
+        if (typeof showNotification === 'function') {
+          showNotification(`Payment failed: ${response.error.description}`, 'error');
+        } else {
+          alert(`Payment Failed: ${response.error.description}`);
+        }
+      });
+
+      rzp.open();
+    }
+
+    function handlePaymentSuccess(paymentId) {
+      closeSubscriptionModal();
+
+      const subscriptionData = {
+        isPro: true,
+        planDurationMonths: selectedPlanMonths,
+        paymentId: paymentId,
+        amountPaid: selectedPlanTotalAmount,
+        currency: '₹',
+        activatedAt: new Date().toISOString(),
+        validUntil: new Date(Date.now() + selectedPlanMonths * 30 * 24 * 60 * 60 * 1000).toISOString()
+      };
+
+      // Save locally
+      localStorage.setItem('optigoal_pro_subscription', JSON.stringify(subscriptionData));
+
+      // Save to Firebase Firestore
+      const db = getFirestoreDb();
+      const userId = getActiveUserId();
+      if (db && userId) {
+        db.collection('users').doc(userId).set({
+          subscription: subscriptionData
+        }, { merge: true }).catch(e => console.warn('Subscription Firestore sync notice:', e));
+      }
+
+      // Update UI Header and Badge
+      updateProUiStatus(true, subscriptionData);
+
+      if (typeof showNotification === 'function') {
+        showNotification(`🎉 Payment of ₹${selectedPlanTotalAmount.toLocaleString('en-IN')} successful! Optigoal Pro Engine unlocked for ${selectedPlanMonths} months.`, 'success');
+      } else {
+        alert(`Payment of ₹${selectedPlanTotalAmount} Successful!\nPayment ID: ${paymentId}\nPro plan activated for ${selectedPlanMonths} months.`);
+      }
+    }
+
+    function updateProUiStatus(isPro, sub) {
+      const upgradeBtn = document.getElementById('btn-header-upgrade');
+      const badgeText = document.getElementById('header-plan-badge-text');
+      const sidebarBanner = document.getElementById('sidebar-pro-banner');
+
+      if (isPro && upgradeBtn) {
+        upgradeBtn.className = 'flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm font-black shadow-md shadow-amber-500/30 transition-all cursor-pointer';
+        if (badgeText) badgeText.textContent = `⭐ Pro Active (${sub?.planDurationMonths || selectedPlanMonths}mo)`;
+        upgradeBtn.onclick = function() {
+          alert(`⭐ You are an Optigoal Pro Member!\nPlan: ${sub?.planDurationMonths || selectedPlanMonths} Months\nPayment ID: ${sub?.paymentId || 'Verified'}\nStatus: Active`);
+        };
+      }
+
+      if (isPro && sidebarBanner) {
+        sidebarBanner.innerHTML = `
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[10px] font-black uppercase tracking-widest bg-amber-400 text-purple-950 px-2 py-0.5 rounded-full">ACTIVE</span>
+              <span class="text-xs font-black text-amber-300">⭐ Pro Member</span>
+            </div>
+            <h5 class="text-sm font-black leading-tight">Optigoal Pro Active</h5>
+            <p class="text-[11px] text-purple-200 mt-1">${sub?.planDurationMonths || selectedPlanMonths} Months Horizon • Zero Limits</p>
+          </div>
+        `;
+      }
+    }
+
+    function checkActiveSubscriptionOnLoad() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('optigoal_pro_subscription') || 'null');
+        if (saved && saved.isPro) {
+          updateProUiStatus(true, saved);
+        }
+      } catch(e) {}
+    }
+
     // ================= DOM READY EVENT LISTENERS =================
     document.addEventListener("DOMContentLoaded", () => {
       initCharts();
       renderAll();
       initCloudDatabaseSync();
       initChatDragAndDrop();
+      checkActiveSubscriptionOnLoad();
+      if (window.location.search.includes('upgrade=true')) {
+        openSubscriptionModal();
+      }
 
       // Navigation Buttons
       document.getElementById('nav-btn-overview')?.addEventListener('click', () => switchToView('overview'));
@@ -3037,6 +3367,9 @@
       });
       document.getElementById('modal-financial-profile')?.addEventListener('click', (e) => {
         if (e.target.id === 'modal-financial-profile') closeFinancialProfileModal();
+      });
+      document.getElementById('modal-upgrade-subscription')?.addEventListener('click', (e) => {
+        if (e.target.id === 'modal-upgrade-subscription') closeSubscriptionModal();
       });
     });
   </script>
