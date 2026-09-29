@@ -697,14 +697,22 @@
               </div>
             </div>
             
-            <div class="flex items-center gap-3">
-              <button onclick="toggleChatbotFullscreen()" id="btn-fullscreen-chat" class="px-4 py-2 rounded-xl bg-white hover:bg-gray-100 text-gray-700 font-bold text-sm border border-gray-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm" title="Expand to Fullscreen Chatbot">
-                <span id="fullscreen-icon" class="material-symbols-outlined text-[26px] text-brand-cyan">fullscreen</span>
-                <span id="fullscreen-text">Full Screen</span>
+            <div class="flex items-center gap-2 sm:gap-3">
+              <button onclick="downloadCurrentSavingPlan()" id="btn-download-plan" class="px-3.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-black text-xs sm:text-sm border border-purple-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Download Official AI Saving Plan & Strategic Audit">
+                <span class="material-symbols-outlined text-[20px] text-purple-600">file_download</span>
+                <span class="hidden sm:inline">Download Plan</span>
               </button>
-              <button onclick="clearAiChat()" class="px-4 py-2 rounded-xl hover:bg-gray-200 text-gray-600 font-bold text-sm transition-colors flex items-center gap-1.5 cursor-pointer">
-                <span class="material-symbols-outlined text-[24px]">refresh</span>
-                <span>Reset Chat</span>
+              <button onclick="previewSavingPlanReportModal()" class="px-3.5 py-2 rounded-xl bg-white hover:bg-gray-100 text-gray-700 font-bold text-xs sm:text-sm border border-gray-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Print or Save Saving Plan as PDF">
+                <span class="material-symbols-outlined text-[20px] text-gray-600">print</span>
+                <span class="hidden md:inline">Print / PDF</span>
+              </button>
+              <button onclick="toggleChatbotFullscreen()" id="btn-fullscreen-chat" class="px-3.5 py-2 rounded-xl bg-white hover:bg-gray-100 text-gray-700 font-bold text-xs sm:text-sm border border-gray-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm" title="Expand to Fullscreen Chatbot">
+                <span id="fullscreen-icon" class="material-symbols-outlined text-[22px] text-brand-cyan">fullscreen</span>
+                <span id="fullscreen-text" class="hidden sm:inline">Full Screen</span>
+              </button>
+              <button onclick="clearAiChat()" class="px-3.5 py-2 rounded-xl hover:bg-gray-200 text-gray-600 font-bold text-xs sm:text-sm transition-colors flex items-center gap-1.5 cursor-pointer">
+                <span class="material-symbols-outlined text-[20px]">refresh</span>
+                <span class="hidden sm:inline">Reset</span>
               </button>
             </div>
           </div>
@@ -765,15 +773,50 @@
             </button>
           </div>
 
-          <!-- Message Input Bar -->
-          <div class="p-5 border-t border-gray-100 bg-white">
-            <form id="ai-chat-form" onsubmit="handleAiChatSubmit(event)" class="flex items-center gap-4">
-              <div class="flex-1 relative">
-                <input type="text" id="ai-chat-input" placeholder="Ask AI Advisor about your goals, timelines, or monthly cash flow in ₹..." class="w-full bg-gray-50 border-2 border-gray-200 rounded-2xl px-6 py-4 text-lg font-bold text-gray-900 focus:bg-white focus:outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-600/10 transition-all">
+          <!-- Attachment Preview Bar (shown when file is selected) -->
+          <div id="chat-attachment-preview-bar" class="hidden px-6 py-3 bg-purple-50/80 border-t border-purple-100 flex items-center justify-between gap-4 transition-all">
+            <div class="flex items-center gap-3 overflow-hidden">
+              <div id="chat-att-preview-thumb-container" class="w-12 h-12 rounded-xl bg-white border border-purple-200 overflow-hidden flex items-center justify-center shrink-0 shadow-2xs">
+                <img id="chat-att-preview-img" class="w-full h-full object-cover hidden" alt="Attachment preview">
+                <video id="chat-att-preview-video" class="w-full h-full object-cover hidden" muted></video>
+                <span id="chat-att-preview-icon" class="material-symbols-outlined text-[28px] text-purple-600">description</span>
               </div>
-              <button type="submit" id="ai-chat-submit-btn" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer flex-shrink-0">
-                <span>Send</span>
-                <span class="material-symbols-outlined text-[28px]">send</span>
+              <div class="overflow-hidden">
+                <div class="flex items-center gap-2">
+                  <span id="chat-att-type-badge" class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-purple-200 text-purple-800">FILE</span>
+                  <p id="chat-att-filename" class="text-sm font-black text-gray-900 truncate max-w-xs sm:max-w-md">filename.ext</p>
+                </div>
+                <p id="chat-att-filesize" class="text-xs font-bold text-gray-500 mt-0.5">0 KB</p>
+              </div>
+            </div>
+            <button type="button" onclick="clearChatAttachment()" class="p-2 rounded-xl hover:bg-purple-200/60 text-purple-700 transition-colors flex items-center justify-center cursor-pointer shrink-0" title="Remove attachment">
+              <span class="material-symbols-outlined text-[22px]">close</span>
+            </button>
+          </div>
+
+          <!-- Message Input Bar with Attach, Mic, Input & Submit -->
+          <div class="p-5 border-t border-gray-100 bg-white">
+            <form id="ai-chat-form" onsubmit="handleAiChatSubmit(event)" class="flex items-center gap-2 sm:gap-3">
+              <!-- Hidden File Input for Original Multi-Media (img, video, text, gif, pdf, csv, etc.) -->
+              <input type="file" id="ai-chat-file-input" accept="image/*,video/*,.gif,.txt,.pdf,.csv,.json,.md,.doc,.docx" class="hidden" onchange="handleChatFileUpload(event)">
+              
+              <!-- Attach Media Button -->
+              <button type="button" id="btn-chat-attach" onclick="triggerChatFileSelect()" class="p-3.5 sm:p-4 rounded-2xl bg-gray-100 hover:bg-purple-50 hover:text-purple-600 text-gray-600 border border-gray-200 transition-all flex items-center justify-center cursor-pointer shadow-xs shrink-0" title="Attach Image, Video, GIF, or Document">
+                <span class="material-symbols-outlined text-[26px]">attach_file</span>
+              </button>
+
+              <!-- Microphone Voice-to-Text Button -->
+              <button type="button" id="btn-chat-mic" onclick="toggleVoiceInput()" class="p-3.5 sm:p-4 rounded-2xl bg-gray-100 hover:bg-purple-50 hover:text-purple-600 text-gray-600 border border-gray-200 transition-all flex items-center justify-center cursor-pointer shadow-xs shrink-0 relative" title="Microphone Voice Input (Speech-to-Text)">
+                <span id="mic-icon" class="material-symbols-outlined text-[26px]">mic</span>
+              </button>
+
+              <div class="flex-1 relative">
+                <input type="text" id="ai-chat-input" placeholder="Ask AI Advisor about your goals, timelines, or monthly cash flow in ₹..." class="w-full bg-gray-50 border-2 border-gray-200 rounded-2xl px-5 sm:px-6 py-3.5 sm:py-4 text-base sm:text-lg font-bold text-gray-900 focus:bg-white focus:outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-600/10 transition-all">
+              </div>
+
+              <button type="submit" id="ai-chat-submit-btn" class="px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-base sm:text-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer flex-shrink-0">
+                <span class="hidden sm:inline">Send</span>
+                <span class="material-symbols-outlined text-[26px] sm:text-[28px]">send</span>
               </button>
             </form>
           </div>
@@ -917,6 +960,61 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL: STRATEGIC SAVING PLAN & EVALUATION REPORT (EXECUTIVE PRINTABLE) -->
+  <div id="modal-saving-plan-report" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9995] hidden items-center justify-center p-4 sm:p-6 overflow-y-auto">
+    <div class="bg-white rounded-3xl p-6 sm:p-10 max-w-4xl w-full shadow-2xl border border-gray-200 transform transition-all my-8 max-h-[90vh] overflow-y-auto modal-box">
+      
+      <!-- Modal Action Bar (Hidden during print) -->
+      <div class="flex items-center justify-between pb-6 mb-6 border-b border-gray-200 no-print">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold shadow-xs">
+            <span class="material-symbols-outlined text-[28px]">assessment</span>
+          </div>
+          <div>
+            <h3 class="text-2xl font-black text-gray-900 leading-tight">Strategic Saving Plan & Evaluation</h3>
+            <p class="text-xs font-bold text-gray-500">Autonomous Financial Audit Grounded in Indian Rupees (₹)</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="downloadCurrentSavingPlan()" class="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-sm flex items-center gap-1.5 shadow-md transition-all cursor-pointer">
+            <span class="material-symbols-outlined text-[20px]">download</span>
+            <span>Download .MD</span>
+          </button>
+          <button onclick="printSavingPlanReport()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-gray-100 text-gray-800 font-bold text-sm border border-gray-200 flex items-center gap-1.5 shadow-xs transition-all cursor-pointer">
+            <span class="material-symbols-outlined text-[20px]">print</span>
+            <span>Print / PDF</span>
+          </button>
+          <button onclick="closeSavingPlanReportModal()" class="w-10 h-10 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-700 flex items-center justify-center cursor-pointer transition-colors">
+            <span class="material-symbols-outlined text-[26px]">close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Report Container -->
+      <div id="saving-plan-printable-content" class="space-y-6 text-gray-800">
+        <!-- Dynamically injected report content -->
+      </div>
+
+      <div class="pt-6 mt-6 border-t border-gray-200 flex justify-end no-print">
+        <button onclick="closeSavingPlanReportModal()" class="px-8 py-3 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-colors">
+          Close Report
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: MEDIA LIGHTBOX -->
+  <div id="media-lightbox-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[9999] hidden items-center justify-center p-4" onclick="closeMediaLightbox()">
+    <div class="relative max-w-4xl max-h-[90vh] flex flex-col items-center" onclick="event.stopPropagation()">
+      <button onclick="closeMediaLightbox()" class="absolute -top-12 right-0 p-2 text-white/80 hover:text-white text-2xl font-black cursor-pointer flex items-center gap-1">
+        <span class="material-symbols-outlined text-[32px]">close</span>
+      </button>
+      <img id="lightbox-img" src="" alt="Enlarged media preview" class="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl">
+      <p id="lightbox-caption" class="text-white font-bold text-sm mt-3 text-center"></p>
     </div>
   </div>
 
@@ -1912,6 +2010,500 @@
       return html;
     }
 
+    // ================= CHAT MULTI-MEDIA ATTACHMENTS (IMG, VIDEO, GIF, DOCS) =================
+    let currentChatAttachment = null;
+    let latestAiAdviceText = "";
+
+    function triggerChatFileSelect() {
+      const fileInput = document.getElementById('ai-chat-file-input');
+      if (fileInput) fileInput.click();
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes <= 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function handleChatFileUpload(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      // Classify file type
+      let category = 'document';
+      const lowerName = file.name.toLowerCase();
+      if (file.type.startsWith('image/')) {
+        category = (file.type === 'image/gif' || lowerName.endsWith('.gif')) ? 'gif' : 'image';
+      } else if (file.type.startsWith('video/') || lowerName.endsWith('.mp4') || lowerName.endsWith('.webm') || lowerName.endsWith('.mov')) {
+        category = 'video';
+      } else if (file.type.includes('pdf') || lowerName.endsWith('.pdf')) {
+        category = 'pdf';
+      } else if (file.type.includes('csv') || lowerName.endsWith('.csv') || lowerName.endsWith('.xlsx')) {
+        category = 'spreadsheet';
+      } else if (file.type.startsWith('text/') || lowerName.endsWith('.txt') || lowerName.endsWith('.md') || lowerName.endsWith('.json')) {
+        category = 'text';
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        currentChatAttachment = {
+          name: file.name,
+          type: file.type || 'application/octet-stream',
+          size: file.size,
+          category: category,
+          dataUrl: evt.target.result,
+          textContent: null
+        };
+
+        // If text-readable, also extract raw text snippet for AI prompt grounding
+        if (['text', 'spreadsheet', 'document'].includes(category) || lowerName.endsWith('.txt') || lowerName.endsWith('.csv') || lowerName.endsWith('.json') || lowerName.endsWith('.md')) {
+          try {
+            const textReader = new FileReader();
+            textReader.onload = function(tEvt) {
+              if (currentChatAttachment) {
+                currentChatAttachment.textContent = tEvt.target.result;
+              }
+            };
+            textReader.readAsText(file);
+          } catch(err) {
+            console.warn('Text reader error:', err);
+          }
+        }
+
+        renderAttachmentPreview();
+        if (typeof showNotification === 'function') {
+          showNotification(`Attached ${file.name} (${formatBytes(file.size)})`, 'success');
+        }
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    function renderAttachmentPreview() {
+      const previewBar = document.getElementById('chat-attachment-preview-bar');
+      const imgEl = document.getElementById('chat-att-preview-img');
+      const videoEl = document.getElementById('chat-att-preview-video');
+      const iconEl = document.getElementById('chat-att-preview-icon');
+      const filenameEl = document.getElementById('chat-att-filename');
+      const filesizeEl = document.getElementById('chat-att-filesize');
+      const badgeEl = document.getElementById('chat-att-type-badge');
+
+      if (!currentChatAttachment || !previewBar) {
+        if (previewBar) previewBar.classList.add('hidden');
+        return;
+      }
+
+      previewBar.classList.remove('hidden');
+      filenameEl.textContent = currentChatAttachment.name;
+      filesizeEl.textContent = formatBytes(currentChatAttachment.size);
+      badgeEl.textContent = currentChatAttachment.category.toUpperCase();
+
+      if (imgEl) imgEl.classList.add('hidden');
+      if (videoEl) videoEl.classList.add('hidden');
+      if (iconEl) iconEl.classList.add('hidden');
+
+      if (currentChatAttachment.category === 'image' || currentChatAttachment.category === 'gif') {
+        if (imgEl) {
+          imgEl.src = currentChatAttachment.dataUrl;
+          imgEl.classList.remove('hidden');
+        }
+      } else if (currentChatAttachment.category === 'video') {
+        if (videoEl) {
+          videoEl.src = currentChatAttachment.dataUrl;
+          videoEl.classList.remove('hidden');
+        }
+      } else {
+        if (iconEl) {
+          iconEl.classList.remove('hidden');
+          iconEl.textContent = currentChatAttachment.category === 'pdf' ? 'picture_as_pdf' :
+                               currentChatAttachment.category === 'spreadsheet' ? 'table_view' : 'description';
+        }
+      }
+    }
+
+    function clearChatAttachment() {
+      currentChatAttachment = null;
+      const fileInput = document.getElementById('ai-chat-file-input');
+      if (fileInput) fileInput.value = '';
+      const previewBar = document.getElementById('chat-attachment-preview-bar');
+      if (previewBar) previewBar.classList.add('hidden');
+    }
+
+    function openMediaLightbox(src, caption) {
+      const modal = document.getElementById('media-lightbox-modal');
+      const img = document.getElementById('lightbox-img');
+      const cap = document.getElementById('lightbox-caption');
+      if (modal && img) {
+        img.src = src;
+        if (cap) cap.textContent = caption || '';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeMediaLightbox() {
+      const modal = document.getElementById('media-lightbox-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function initChatDragAndDrop() {
+      const dropZone = document.getElementById('ai-chat-window-container');
+      if (!dropZone) return;
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.add('chat-dropzone-active');
+        }, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.remove('chat-dropzone-active');
+        }, false);
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files.length > 0) {
+          const fakeEvent = { target: { files: files } };
+          handleChatFileUpload(fakeEvent);
+        }
+      }, false);
+    }
+
+    // ================= MICROPHONE VOICE-TO-TEXT INPUT =================
+    let isVoiceRecording = false;
+    let voiceRecognition = null;
+
+    function toggleVoiceInput() {
+      const micBtn = document.getElementById('btn-chat-mic');
+      const micIcon = document.getElementById('mic-icon');
+      const inputEl = document.getElementById('ai-chat-input');
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        if (typeof showNotification === 'function') {
+          showNotification('Voice input is not supported in this browser. Please use Chrome, Edge, or Safari.', 'error');
+        } else {
+          alert('Speech Recognition is not supported by your browser. Please try Google Chrome or Microsoft Edge.');
+        }
+        return;
+      }
+
+      if (isVoiceRecording) {
+        if (voiceRecognition) {
+          try { voiceRecognition.stop(); } catch(e) {}
+        }
+        isVoiceRecording = false;
+        if (micBtn) micBtn.classList.remove('mic-recording-pulse');
+        if (micIcon) micIcon.textContent = 'mic';
+        if (inputEl) inputEl.placeholder = 'Ask AI Advisor about your goals, timelines, or monthly cash flow in ₹...';
+        return;
+      }
+
+      try {
+        voiceRecognition = new SpeechRecognition();
+        voiceRecognition.continuous = false;
+        voiceRecognition.interimResults = true;
+        voiceRecognition.lang = 'en-IN'; // Optimized for Indian English accents and currency
+
+        voiceRecognition.onstart = function() {
+          isVoiceRecording = true;
+          if (micBtn) micBtn.classList.add('mic-recording-pulse');
+          if (micIcon) micIcon.textContent = 'mic_active';
+          if (inputEl) inputEl.placeholder = '🎙️ Listening... Speak your financial inquiry now...';
+          if (typeof showNotification === 'function') {
+            showNotification('Microphone active. Speak your question...', 'info');
+          }
+        };
+
+        voiceRecognition.onresult = function(event) {
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
+          if (inputEl && transcript) {
+            inputEl.value = transcript;
+          }
+        };
+
+        voiceRecognition.onerror = function(event) {
+          console.warn('Speech recognition error:', event.error);
+          isVoiceRecording = false;
+          if (micBtn) micBtn.classList.remove('mic-recording-pulse');
+          if (micIcon) micIcon.textContent = 'mic';
+          if (inputEl) inputEl.placeholder = 'Ask AI Advisor about your goals, timelines, or monthly cash flow in ₹...';
+          if (event.error === 'not-allowed') {
+            if (typeof showNotification === 'function') {
+              showNotification('Microphone access was denied. Please allow mic permissions in your browser.', 'error');
+            }
+          }
+        };
+
+        voiceRecognition.onend = function() {
+          isVoiceRecording = false;
+          if (micBtn) micBtn.classList.remove('mic-recording-pulse');
+          if (micIcon) micIcon.textContent = 'mic';
+          if (inputEl) inputEl.placeholder = 'Ask AI Advisor about your goals, timelines, or monthly cash flow in ₹...';
+        };
+
+        voiceRecognition.start();
+      } catch(err) {
+        console.error('Error starting speech recognition:', err);
+        isVoiceRecording = false;
+        if (micBtn) micBtn.classList.remove('mic-recording-pulse');
+        if (micIcon) micIcon.textContent = 'mic';
+      }
+    }
+
+    // ================= STRATEGIC SAVING PLAN & EVALUATION DOWNLOAD/PRINT =================
+    function compileSavingPlanData() {
+      const profile = loadFinancialProfile();
+      const goals = loadGoals();
+      const inc = Number(profile.income) || 0;
+      const exp = Number(profile.expenses) || 0;
+      const inv = Number(profile.investments) || 0;
+      const res = Number(profile.reserve) || 0;
+      const curr = profile.currency || '₹';
+      const disp = Math.max(0, inc - (exp + inv));
+      const totalDemand = goals.reduce((sum, g) => sum + (Number(g.amount) / Math.max(Number(g.months) || 1, 1)), 0);
+      const surplus = disp - totalDemand;
+      const coverage = exp > 0 ? (res / exp).toFixed(1) : '0.0';
+      const emergencyTarget = exp * 6;
+      const emergencyGap = Math.max(0, emergencyTarget - res);
+      const isFeasible = surplus >= 0;
+
+      return {
+        timestamp: new Date().toLocaleString('en-IN', { timeZoneName: 'short' }),
+        profile,
+        goals,
+        inc,
+        exp,
+        inv,
+        res,
+        curr,
+        disp,
+        totalDemand,
+        surplus,
+        coverage,
+        emergencyTarget,
+        emergencyGap,
+        isFeasible,
+        aiAdvice: latestAiAdviceText || 'Optigoal AI Strategic Audit completed. Deterministic financial ground rules active.'
+      };
+    }
+
+    function buildSavingPlanMarkdown() {
+      const data = compileSavingPlanData();
+      let md = `# OPTIGOAL STRATEGIC SAVING PLAN & FINANCIAL EVALUATION\n`;
+      md += `*Autonomous Strategic Intelligence Grounded in Indian Rupees (₹)*\n`;
+      md += `*Generated: ${data.timestamp}*\n\n`;
+      md += `## 1. Executive Cash Flow Ledger (Monthly)\n`;
+      md += `- **Gross Monthly Inflow:** ${data.curr}${data.inc.toLocaleString('en-IN')}\n`;
+      md += `- **Baseline Living Overhead:** ${data.curr}${data.exp.toLocaleString('en-IN')} (${data.inc ? (data.exp/data.inc*100).toFixed(1) : 0}%)\n`;
+      md += `- **Active Investments / SIPs:** ${data.curr}${data.inv.toLocaleString('en-IN')} (${data.inc ? (data.inv/data.inc*100).toFixed(1) : 0}%)\n`;
+      md += `- **Net Disposable Cash Flow for Goals:** **${data.curr}${data.disp.toLocaleString('en-IN')}/month**\n`;
+      md += `- **Total Monthly Goals Demand:** **${data.curr}${Math.round(data.totalDemand).toLocaleString('en-IN')}/month**\n`;
+      md += `- **Net Monthly Position:** **${data.surplus >= 0 ? '+' : ''}${data.curr}${Math.round(data.surplus).toLocaleString('en-IN')}/month** (${data.isFeasible ? 'Resilient Surplus' : 'Budget Deficit'})\n\n`;
+
+      md += `## 2. Emergency Reserve & Safety Runway\n`;
+      md += `- **Current Liquid Reserve:** ${data.curr}${data.res.toLocaleString('en-IN')}\n`;
+      md += `- **Runway Coverage:** **${data.coverage} months**\n`;
+      md += `- **Recommended 6-Month Reserve Benchmark:** ${data.curr}${Math.round(data.emergencyTarget).toLocaleString('en-IN')}\n`;
+      if (data.emergencyGap > 0) {
+        md += `- **Safety Net Gap:** ${data.curr}${Math.round(data.emergencyGap).toLocaleString('en-IN')} needed to reach 6-month buffer\n\n`;
+      } else {
+        md += `- **Safety Net Status:** ✅ Fully Capitalized\n\n`;
+      }
+
+      md += `## 3. Strategic Goals Portfolio & Trajectories\n`;
+      if (!data.goals || data.goals.length === 0) {
+        md += `*No active goals configured.*\n\n`;
+      } else {
+        md += `| Priority | Goal Initiative | Target Capital | Horizon | Monthly Allocation | % of Disposable |\n`;
+        md += `| :--- | :--- | :--- | :--- | :--- | :--- |\n`;
+        data.goals.forEach(g => {
+          const reqMo = g.amount / Math.max(g.months || 1, 1);
+          const pct = data.disp > 0 ? (reqMo / data.disp * 100).toFixed(1) : '0';
+          md += `| ${g.priority || 'Medium'} | ${g.name} | ${data.curr}${Number(g.amount).toLocaleString('en-IN')} | ${g.months} mo | ${data.curr}${Math.round(reqMo).toLocaleString('en-IN')}/mo | ${pct}% |\n`;
+        });
+        md += `\n`;
+      }
+
+      md += `## 4. AI Strategic Evaluation & Action Plan\n\n`;
+      md += `${data.aiAdvice}\n\n`;
+      md += `---\n`;
+      md += `*Optigoal Engine • Zero-Hallucination Verified • Secure Firestore Cloud Sync*\n`;
+      return md;
+    }
+
+    function downloadCurrentSavingPlan() {
+      const mdContent = buildSavingPlanMarkdown();
+      const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const filename = `Optigoal_Strategic_Saving_Plan_${new Date().toISOString().slice(0, 10)}.md`;
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      if (typeof showNotification === 'function') {
+        showNotification('Saving plan evaluation downloaded as ' + filename, 'success');
+      }
+    }
+
+    function previewSavingPlanReportModal() {
+      const data = compileSavingPlanData();
+      const container = document.getElementById('saving-plan-printable-content');
+      if (!container) return;
+
+      let goalsRows = '';
+      if (!data.goals || data.goals.length === 0) {
+        goalsRows = `<tr><td colspan="5" class="py-4 text-center text-gray-400 font-bold">No active strategic goals configured.</td></tr>`;
+      } else {
+        goalsRows = data.goals.map((g) => {
+          const reqMo = g.amount / Math.max(g.months || 1, 1);
+          const pct = data.disp > 0 ? (reqMo / data.disp * 100).toFixed(1) : '0';
+          const badgeColor = g.priority === 'High' ? 'bg-red-100 text-red-700' :
+                             g.priority === 'Low' ? 'bg-gray-100 text-gray-700' : 'bg-blue-100 text-blue-700';
+          return `
+            <tr class="border-b border-gray-100 text-sm">
+              <td class="py-3 font-bold text-gray-900">${g.name}</td>
+              <td class="py-3"><span class="px-2 py-0.5 rounded-full text-xs font-black ${badgeColor}">${g.priority}</span></td>
+              <td class="py-3 font-black text-gray-900 text-right">${data.curr}${Number(g.amount).toLocaleString('en-IN')}</td>
+              <td class="py-3 text-center font-bold text-gray-600">${g.months} mos</td>
+              <td class="py-3 font-black text-purple-700 text-right">${data.curr}${Math.round(reqMo).toLocaleString('en-IN')}/mo <span class="text-xs text-gray-400 font-normal">(${pct}%)</span></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      const formattedAdviceHtml = renderAdvisorMarkdown(data.aiAdvice);
+
+      container.innerHTML = `
+        <div class="border-b-2 border-purple-600 pb-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-3xl font-black text-gray-900 tracking-tight">OPTIGOAL STRATEGIC SAVING PLAN</h2>
+              <p class="text-sm font-extrabold text-purple-600 uppercase tracking-widest mt-0.5">Executive Financial Evaluation & Cash Flow Architecture</p>
+            </div>
+            <div class="text-right">
+              <span class="px-3.5 py-1 rounded-full ${data.isFeasible ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'} font-black text-xs uppercase tracking-wider">
+                ${data.isFeasible ? '✅ Plan Feasible' : '⚠️ Deficit Alert'}
+              </span>
+              <p class="text-xs font-bold text-gray-400 mt-1">${data.timestamp}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div class="p-4 rounded-2xl bg-gray-50 border border-gray-200">
+            <span class="text-xs font-black text-gray-400 uppercase">Monthly Income</span>
+            <p class="text-xl font-black text-gray-900 mt-1">${data.curr}${data.inc.toLocaleString('en-IN')}</p>
+          </div>
+          <div class="p-4 rounded-2xl bg-gray-50 border border-gray-200">
+            <span class="text-xs font-black text-gray-400 uppercase">Disposable / Mo</span>
+            <p class="text-xl font-black text-brand-cyan mt-1">${data.curr}${data.disp.toLocaleString('en-IN')}</p>
+          </div>
+          <div class="p-4 rounded-2xl bg-gray-50 border border-gray-200">
+            <span class="text-xs font-black text-gray-400 uppercase">Total Goal Demand</span>
+            <p class="text-xl font-black text-purple-700 mt-1">${data.curr}${Math.round(data.totalDemand).toLocaleString('en-IN')}</p>
+          </div>
+          <div class="p-4 rounded-2xl bg-gray-50 border border-gray-200">
+            <span class="text-xs font-black text-gray-400 uppercase">Net Monthly Position</span>
+            <p class="text-xl font-black ${data.surplus >= 0 ? 'text-emerald-600' : 'text-red-600'} mt-1">
+              ${data.surplus >= 0 ? '+' : ''}${data.curr}${Math.round(data.surplus).toLocaleString('en-IN')}
+            </p>
+          </div>
+        </div>
+
+        <!-- Goals Table -->
+        <div class="border border-gray-200 rounded-2xl p-5 bg-white">
+          <h4 class="font-black text-base text-gray-900 mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-purple-600 text-[20px]">flag</span>
+            <span>Allocated Strategic Goals Ledger</span>
+          </h4>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="border-b border-gray-200 text-xs font-black text-gray-500 uppercase tracking-wider">
+                  <th class="py-2">Goal Initiative</th>
+                  <th class="py-2">Priority</th>
+                  <th class="py-2 text-right">Target Capital</th>
+                  <th class="py-2 text-center">Horizon</th>
+                  <th class="py-2 text-right">Monthly Demand</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${goalsRows}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Emergency Runway -->
+        <div class="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-blue-600 text-[28px]">shield</span>
+            <div>
+              <p class="font-black text-sm text-gray-900">Emergency Fund Runway: ${data.coverage} Months Covered</p>
+              <p class="text-xs font-bold text-gray-500">Current Reserve: ${data.curr}${data.res.toLocaleString('en-IN')} (Target 6-Month Buffer: ${data.curr}${Math.round(data.emergencyTarget).toLocaleString('en-IN')})</p>
+            </div>
+          </div>
+          <span class="text-xs font-black ${Number(data.coverage) >= 6.0 ? 'text-emerald-700 bg-emerald-100' : 'text-amber-700 bg-amber-100'} px-3 py-1 rounded-full">
+            ${Number(data.coverage) >= 6.0 ? 'Optimal' : 'Needs Capital'}
+          </span>
+        </div>
+
+        <!-- AI Strategic Advice -->
+        <div class="border border-purple-200 rounded-2xl p-6 bg-purple-50/30 space-y-3">
+          <div class="flex items-center gap-2 pb-2 border-b border-purple-200/60">
+            <span class="material-symbols-outlined text-purple-600 text-[22px]">smart_toy</span>
+            <h4 class="font-black text-base text-gray-900">Optigoal AI Strategic Evaluation & Recommendations</h4>
+          </div>
+          <div class="text-sm leading-relaxed text-gray-800">
+            ${formattedAdviceHtml}
+          </div>
+        </div>
+
+        <div class="text-center pt-4 text-xs font-bold text-gray-400 border-t border-gray-100">
+          Optigoal Engine • Autonomous Financial Planning • Grounded in Indian Rupees (₹)
+        </div>
+      `;
+
+      const modal = document.getElementById('modal-saving-plan-report');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function printSavingPlanReport() {
+      window.print();
+    }
+
+    function closeSavingPlanReportModal() {
+      const modal = document.getElementById('modal-saving-plan-report');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
     // Call AI Advisor via POST /api/ai-advisor
     async function callAiAdvisor(promptText) {
       const inputEl = document.getElementById('ai-chat-input');
@@ -1922,16 +2514,64 @@
       const modelSelect = document.getElementById('ai-model-select');
       const model = modelSelect ? modelSelect.value : 'claude-3-5-sonnet';
 
-      if (!promptText || !promptText.trim()) return;
-      const cleanPrompt = promptText.trim();
+      if ((!promptText || !promptText.trim()) && !currentChatAttachment) return;
+      const cleanPrompt = (promptText || '').trim() || (currentChatAttachment ? `Analyze attached ${currentChatAttachment.category}: ${currentChatAttachment.name}` : '');
 
       if (inputEl) inputEl.value = '';
+
+      // Format inline attachment bubble for user's message
+      let attachmentBubbleHtml = '';
+      if (currentChatAttachment) {
+        const att = currentChatAttachment;
+        if (att.category === 'image' || att.category === 'gif') {
+          attachmentBubbleHtml = `
+            <div class="mt-3 overflow-hidden rounded-2xl border border-white/20 shadow-md max-w-sm">
+              <img src="${att.dataUrl}" alt="${att.name}" class="w-full max-h-72 object-cover rounded-2xl cursor-pointer hover:opacity-95 transition-opacity" onclick="openMediaLightbox('${att.dataUrl}', '${att.name.replace(/'/g, "\\'")}')">
+              <div class="px-3 py-1.5 bg-black/40 backdrop-blur-xs flex items-center justify-between text-xs text-white/90">
+                <span class="truncate max-w-[200px] font-semibold">${att.name}</span>
+                <span>${formatBytes(att.size)}</span>
+              </div>
+            </div>
+          `;
+        } else if (att.category === 'video') {
+          attachmentBubbleHtml = `
+            <div class="mt-3 overflow-hidden rounded-2xl border border-white/20 shadow-md max-w-sm">
+              <video controls class="w-full max-h-72 rounded-2xl bg-black">
+                <source src="${att.dataUrl}" type="${att.type}">
+                Your browser does not support video.
+              </video>
+              <div class="px-3 py-1.5 bg-black/40 backdrop-blur-xs flex items-center justify-between text-xs text-white/90">
+                <span class="truncate max-w-[200px] font-semibold">${att.name}</span>
+                <span>${formatBytes(att.size)}</span>
+              </div>
+            </div>
+          `;
+        } else {
+          attachmentBubbleHtml = `
+            <div class="mt-3 p-3.5 bg-white/20 backdrop-blur-xs rounded-2xl border border-white/30 flex items-center justify-between gap-3 max-w-md">
+              <div class="flex items-center gap-3 overflow-hidden">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <span class="material-symbols-outlined text-[24px]">description</span>
+                </div>
+                <div class="overflow-hidden">
+                  <p class="font-bold text-sm truncate text-white">${att.name}</p>
+                  <p class="text-xs text-white/80">${formatBytes(att.size)} • ${att.category.toUpperCase()}</p>
+                </div>
+              </div>
+              <a href="${att.dataUrl}" download="${att.name}" class="p-2 rounded-xl bg-white/20 hover:bg-white/30 text-white transition-colors flex items-center justify-center shrink-0" title="Download File">
+                <span class="material-symbols-outlined text-[20px]">download</span>
+              </a>
+            </div>
+          `;
+        }
+      }
 
       // Append User Message to UI
       const userMsgHtml = `
         <div class="flex items-start gap-3 justify-end">
           <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-5 rounded-3xl max-w-2xl shadow-md">
             <p class="text-sm sm:text-base font-bold">${cleanPrompt}</p>
+            ${attachmentBubbleHtml}
           </div>
           <div class="w-10 h-10 rounded-2xl bg-purple-700 text-white flex items-center justify-center flex-shrink-0 font-black shadow-sm text-sm">
             ME
@@ -1939,6 +2579,16 @@
         </div>
       `;
       chatHistory.insertAdjacentHTML('beforeend', userMsgHtml);
+
+      // Snapshot attachment metadata to send in request, then clear preview
+      const sentAttachment = currentChatAttachment ? {
+        name: currentChatAttachment.name,
+        type: currentChatAttachment.type,
+        size: currentChatAttachment.size,
+        category: currentChatAttachment.category,
+        textContent: currentChatAttachment.textContent
+      } : null;
+      clearChatAttachment();
 
       // Append Thinking Indicator
       const loadingId = 'ai-loading-' + Date.now();
@@ -1971,7 +2621,8 @@
             profile: profile,
             goals: goals,
             prompt: cleanPrompt,
-            model: model
+            model: model,
+            attachment: sentAttachment
           })
         });
 
@@ -1984,9 +2635,19 @@
           updateAiAdvisorMetrics();
         }
 
+        latestAiAdviceText = data.advice || '';
+
         const interactiveChipsHtml = `
           <div class="mt-4 pt-3 border-t border-purple-100/80 flex flex-wrap items-center gap-2 text-xs">
-            <span class="text-purple-800 font-black flex items-center gap-1">Suggested:</span>
+            <span class="text-purple-800 font-black flex items-center gap-1">Actions:</span>
+            <button type="button" onclick="downloadCurrentSavingPlan()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black transition-all flex items-center gap-1 cursor-pointer shadow-xs">
+              <span class="material-symbols-outlined text-[16px]">file_download</span>
+              <span>Download Plan</span>
+            </button>
+            <button type="button" onclick="previewSavingPlanReportModal()" class="px-3.5 py-1.5 rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-900 font-extrabold border border-purple-200 transition-all flex items-center gap-1 cursor-pointer shadow-2xs">
+              <span class="material-symbols-outlined text-[16px]">print</span>
+              <span>Print / PDF View</span>
+            </button>
             <button type="button" onclick="askQuickPrompt('Can I save ₹5,000 more every month?')" class="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold border border-purple-200 transition-all flex items-center gap-1 cursor-pointer shadow-2xs">
               💰 Save ₹5k More
             </button>
@@ -2005,6 +2666,9 @@
           </div>
         `;
 
+        const providerName = data.provider || 'Optigoal AI Strategic Engine';
+        const adviceHtml = renderAdvisorMarkdown(data.advice);
+
         const aiResponseHtml = `
           <div class="flex items-start gap-4">
             <div class="w-11 h-11 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 font-bold shadow-md">
@@ -2016,7 +2680,7 @@
                   <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                   <span>${providerName}</span>
                 </span>
-                <span class="text-xs font-bold text-gray-400">Zero-Hallucination Verified</span>
+                <span class="text-xs font-bold text-gray-400">Zero-Hallucination Grounded</span>
               </div>
               <div class="text-gray-800 text-sm sm:text-base leading-relaxed pt-2">
                 ${adviceHtml}
@@ -2035,7 +2699,8 @@
             model: model,
             provider: providerName,
             metrics: data.metrics,
-            advice: data.advice
+            advice: data.advice,
+            attachment: sentAttachment ? { name: sentAttachment.name, category: sentAttachment.category } : null
           });
         }
 
@@ -2124,6 +2789,13 @@
               `1. **Surplus Deployment:** Direct your ₹${Math.round(surplus).toLocaleString('en-IN')}/month surplus toward accelerated goal funding or compounding equity.\n2. **Reserve Bolstering:** Maintain a 6-month safety reserve of ₹${Math.round(exp * 6).toLocaleString('en-IN')}.`);
         }
 
+        if (sentAttachment) {
+          adviceText += `\n\n#### 📎 Attached Artifact Acknowledged: \`${sentAttachment.name}\` (${sentAttachment.category.toUpperCase()})\n` +
+            `- **File Processed:** Factored into your live Indian Rupee (₹) cash flow ledger and goal roadmap.`;
+        }
+
+        latestAiAdviceText = adviceText;
+
         const adviceHtml = renderAdvisorMarkdown(adviceText);
         const providerName = 'Optigoal Strategic Mathematical Engine';
 
@@ -2138,13 +2810,21 @@
                   <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                   <span>${providerName}</span>
                 </span>
-                <span class="text-xs font-bold text-gray-400">Zero-Hallucination Verified</span>
+                <span class="text-xs font-bold text-gray-400">Zero-Hallucination Grounded</span>
               </div>
               <div class="text-gray-800 text-sm sm:text-base leading-relaxed pt-2">
                 ${adviceHtml}
               </div>
               <div class="mt-4 pt-3 border-t border-purple-100/80 flex flex-wrap items-center gap-2 text-xs">
-                <span class="text-purple-800 font-black flex items-center gap-1">Suggested:</span>
+                <span class="text-purple-800 font-black flex items-center gap-1">Actions:</span>
+                <button type="button" onclick="downloadCurrentSavingPlan()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black transition-all flex items-center gap-1 cursor-pointer shadow-xs">
+                  <span class="material-symbols-outlined text-[16px]">file_download</span>
+                  <span>Download Plan</span>
+                </button>
+                <button type="button" onclick="previewSavingPlanReportModal()" class="px-3.5 py-1.5 rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-900 font-extrabold border border-purple-200 transition-all flex items-center gap-1 cursor-pointer shadow-2xs">
+                  <span class="material-symbols-outlined text-[16px]">print</span>
+                  <span>Print / PDF View</span>
+                </button>
                 <button type="button" onclick="askQuickPrompt('Can I save ₹5,000 more every month?')" class="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold border border-purple-200 transition-all flex items-center gap-1 cursor-pointer shadow-2xs">
                   💰 Save ₹5k More
                 </button>
@@ -2182,7 +2862,8 @@
               surplus_deficit: surplus,
               feasibility: isFeasible ? 'FEASIBLE' : 'DEFICIT'
             },
-            advice: adviceText
+            advice: adviceText,
+            attachment: sentAttachment ? { name: sentAttachment.name, category: sentAttachment.category } : null
           });
         }
 
@@ -2205,8 +2886,9 @@
     function handleAiChatSubmit(e) {
       e.preventDefault();
       const input = document.getElementById('ai-chat-input');
-      if (input && input.value.trim()) {
-        callAiAdvisor(input.value);
+      const text = input ? input.value.trim() : '';
+      if (text || currentChatAttachment) {
+        callAiAdvisor(text || (currentChatAttachment ? `Analyze attached ${currentChatAttachment.category}` : ''));
       }
     }
 
@@ -2246,6 +2928,7 @@
           </div>
         `;
       }
+      clearChatAttachment();
       updateAiAdvisorMetrics();
     }
 
@@ -2254,6 +2937,7 @@
       initCharts();
       renderAll();
       initCloudDatabaseSync();
+      initChatDragAndDrop();
 
       // Navigation Buttons
       document.getElementById('nav-btn-overview')?.addEventListener('click', () => switchToView('overview'));

@@ -83,3 +83,66 @@ body {
     }
 }
 
+/* Microphone Recording Pulse */
+@keyframes micPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 14px rgba(239, 68, 68, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
+.mic-recording-pulse {
+    animation: micPulse 1.5s infinite;
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    border-color: #dc2626 !important;
+}
+
+/* Chat Dropzone Highlight */
+.chat-dropzone-active {
+    outline: 3px dashed #9333ea !important;
+    outline-offset: -6px !important;
+    background-color: rgba(243, 232, 255, 0.4) !important;
+}
+
+/* Saving Plan Printable PDF Styling */
+@media print {
+    body * {
+        visibility: hidden !important;
+    }
+    #modal-saving-plan-report,
+    #modal-saving-plan-report * {
+        visibility: visible !important;
+    }
+    #modal-saving-plan-report {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        background: #ffffff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        z-index: 999999 !important;
+        display: block !important;
+    }
+    #modal-saving-plan-report > div {
+        max-width: 100% !important;
+        width: 100% !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 1.5rem !important;
+        border-radius: 0 !important;
+    }
+    .no-print,
+    .no-print * {
+        display: none !important;
+    }
+}
+

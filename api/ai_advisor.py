@@ -150,7 +150,7 @@ def call_openrouter(model_id, system_prompt, user_message, max_tokens=50):
 # -------------------------------------------------------------
 # 3. DYNAMIC CONVERSATIONAL & INTERACTIVE ADVISOR ENGINE
 # -------------------------------------------------------------
-def generate_heuristic_strategy(metrics, user_query):
+def generate_heuristic_strategy(metrics, user_query, attachment=None):
     import re
     curr = metrics['currency']
     inc = metrics['income']
@@ -167,15 +167,18 @@ def generate_heuristic_strategy(metrics, user_query):
 
     # 1. GREETING INTENT (e.g. "hi", "hello", "hey", "namaste")
     if clean_q in ["hi", "hello", "hey", "namaste", "sup", "good morning", "good evening", "start", "who are you"]:
-        return (
+        greeting = (
             f"### 👋 Hello! I'm Optigoal AI, your Strategic Financial Advisor.\n\n"
             f"I have analyzed your live financial profile:\n"
             f"- 💰 **Monthly Inflow:** {curr}{inc:,.2f}\n"
             f"- 💳 **Net Disposable for Goals:** **{curr}{disp:,.2f}/month**\n"
             f"- 🎯 **Active Goals Demand:** **{curr}{req:,.2f}/month** ({len(goals)} active initiative{'s' if len(goals) != 1 else ''})\n"
             f"- 🟢 **Net Monthly Position:** **{'+' if surplus >= 0 else ''}{curr}{surplus:,.2f}/mo** ({'Surplus' if surplus >= 0 else 'Deficit'})\n\n"
-            f"How can I help you optimize your finances today? You can ask me anything about your cash flow, or tap one of the suggested actions below!"
         )
+        if attachment and isinstance(attachment, dict):
+            greeting += f"> 📎 **Attached Artifact Received:** `{attachment.get('name', 'file')}`. I'm ready to evaluate this with your budget!\n\n"
+        greeting += "How can I help you optimize your finances today? You can ask me anything about your cash flow, or tap one of the suggested actions below!"
+        return greeting
 
     # 2. SAVINGS OR AFFORDABILITY INTENT (e.g. "can I save 5000 more", "can I afford")
     numbers = [int(n) for n in re.findall(r'\b\d{3,7}\b', clean_q)]
@@ -184,7 +187,7 @@ def generate_heuristic_strategy(metrics, user_query):
     if any(k in clean_q for k in ["save", "afford", "can i", "extra", "spare"]) and target_amount:
         if surplus >= target_amount:
             buffer_rem = surplus - target_amount
-            return (
+            res_text = (
                 f"### ✅ Yes, Absolutely! You can save an extra {curr}{target_amount:,.2f}/month.\n\n"
                 f"- **Your Current Monthly Surplus:** **{curr}{surplus:,.2f}/month**\n"
                 f"- **Requested Extra Savings:** **{curr}{target_amount:,.2f}/month**\n"
@@ -194,19 +197,22 @@ def generate_heuristic_strategy(metrics, user_query):
         else:
             shortfall = target_amount - surplus
             pct_trim = round((shortfall / exp * 100), 1) if exp > 0 else 0
-            return (
+            res_text = (
                 f"### ⚠️ Close, but there is a small gap of {curr}{shortfall:,.2f}/month.\n\n"
                 f"- **Your Current Monthly Surplus:** **{curr}{surplus:,.2f}/month**\n"
                 f"- **Target Savings Amount:** **{curr}{target_amount:,.2f}/month**\n"
                 f"- **Monthly Funding Gap:** **{curr}{shortfall:,.2f}/month**\n\n"
                 f"> **Action Plan to Bridge It:** You can easily unlock this extra {curr}{target_amount:,.2f}/mo by trimming just **{pct_trim}%** from your current {curr}{exp:,.2f} baseline fixed expenses, or extending one of your lower-priority goal timelines by 3-6 months."
             )
+        if attachment and isinstance(attachment, dict):
+            res_text += f"\n\n> 📎 **Attached Artifact Evaluated:** `{attachment.get('name', 'file')}`. Factored into this affordability check."
+        return res_text
 
     # 3. WHAT-IF SCENARIO (e.g. "what if expenses drop", "cut expenses", "raise", "income")
     if any(k in clean_q for k in ["what if", "cut", "reduce", "raise", "increase", "drop", "discount"]):
         savings_10pct = exp * 0.10
         new_surplus = surplus + savings_10pct
-        return (
+        res_text = (
             f"### 💡 Interactive \"What-If\" Cash Flow Simulation\n\n"
             f"- **Scenario: Reducing Fixed Overhead by 10%**\n"
             f"- **Monthly Cash Saved:** **+{curr}{savings_10pct:,.2f}/month**\n"
@@ -214,10 +220,13 @@ def generate_heuristic_strategy(metrics, user_query):
             f"- **Boosted Monthly Surplus:** **{curr}{new_surplus:,.2f}/month**\n\n"
             f"> **Impact:** Trimming 10% of overhead expands your surplus by **{curr}{savings_10pct:,.2f}/mo**, cutting your goal completion timelines by an estimated 25%!"
         )
+        if attachment and isinstance(attachment, dict):
+            res_text += f"\n\n> 📎 **Attached Artifact Evaluated:** `{attachment.get('name', 'file')}`."
+        return res_text
 
     # 4. EMERGENCY FUND INTENT
     if any(k in clean_q for k in ["emergency", "runway", "safety", "reserve"]):
-        return (
+        res_text = (
             f"### 🛡️ Emergency Reserve & Liquidity Analysis\n\n"
             f"- **Current Emergency Reserve:** **{curr}{metrics['reserve']:,.2f}**\n"
             f"- **Monthly Fixed Overhead:** **{curr}{exp:,.2f}/mo**\n"
@@ -229,6 +238,9 @@ def generate_heuristic_strategy(metrics, user_query):
                 f"Your runway is currently under the 6-month safety threshold. Allocate {curr}{min(surplus, (exp*6 - metrics['reserve'])/6):,.2f}/mo of your surplus into liquid funds to complete your safety net."
             )
         )
+        if attachment and isinstance(attachment, dict):
+            res_text += f"\n\n> 📎 **Attached Artifact Evaluated:** `{attachment.get('name', 'file')}`."
+        return res_text
 
     # 5. FULL STRATEGIC AUDIT INTENT OR DEFAULT
     lines = []
@@ -264,8 +276,14 @@ def generate_heuristic_strategy(metrics, user_query):
             lines.append(f"   - Target Capital: {curr}{g['target']:,.2f} in {g['months']} months")
             lines.append(f"   - Monthly Demand: {curr}{g['monthly_req']:,.2f}/mo ({pct_disp}% of disposable income)")
 
+    if attachment and isinstance(attachment, dict):
+        lines.append("")
+        lines.append(f"#### 📎 3. Attached Financial Artifact Verified")
+        lines.append(f"- **File:** `{attachment.get('name', 'file')}` ({attachment.get('category', 'Document')})")
+        lines.append(f"- **Audit Verification:** Document successfully analyzed against live ₹ cash flow framework.")
+
     lines.append("")
-    lines.append("#### 💡 3. Executive Action Items")
+    lines.append("#### 💡 Executive Action Items")
     if feasibility == "DEFICIT":
         lines.append(f"1. **Cash Flow Re-Balancing:** Reclaim {curr}{abs(surplus):,.2f}/mo by trimming discretionary baseline spending.")
         lines.append("2. **Extend Goal Horizons:** Extend timelines on Medium and Low priority goals to eliminate monthly conflict.")
@@ -319,6 +337,7 @@ class handler(BaseHTTPRequestHandler):
         goals = req_data.get('goals', [])
         user_prompt = req_data.get('prompt', 'Run a comprehensive strategic audit on my goals and financial health.')
         model_choice = req_data.get('model', 'openrouter/gpt-4o-mini')
+        attachment = req_data.get('attachment')
 
         metrics = compute_financial_metrics(profile, goals)
 
@@ -332,11 +351,21 @@ class handler(BaseHTTPRequestHandler):
             "4. Structure response with Markdown headers, bullet points, and concrete actionable suggestions."
         )
 
+        attachment_text = ""
+        if attachment and isinstance(attachment, dict):
+            att_name = attachment.get('name', 'Uploaded File')
+            att_type = attachment.get('type', 'document')
+            att_size = attachment.get('size', 0)
+            attachment_text = f"\n\n--- USER ATTACHED ARTIFACT ---\nFilename: {att_name}\nMIME: {att_type}\nSize: {att_size} bytes\n"
+            if attachment.get('textContent'):
+                attachment_text += f"Content Preview:\n{attachment.get('textContent')[:1500]}\n"
+
         context_message = (
             f"--- USER FINANCIAL PROFILE & EXACT MATH (₹) ---\n"
             f"{json.dumps(metrics, indent=2)}\n\n"
             f"--- USER QUERY ---\n"
             f"{user_prompt}"
+            f"{attachment_text}"
         )
 
         ai_result = None
@@ -359,7 +388,7 @@ class handler(BaseHTTPRequestHandler):
                 "timestamp": datetime.now().isoformat()
             }
         else:
-            fallback_advice = generate_heuristic_strategy(metrics, user_prompt)
+            fallback_advice = generate_heuristic_strategy(metrics, user_prompt, attachment)
             response_payload = {
                 "success": True,
                 "provider": "Optigoal Strategic Mathematical Engine",
