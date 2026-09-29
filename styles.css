@@ -1,25 +1,14 @@
-/* Custom CSS for OPTIGOAL ENGINE */
+/* OPTIGOAL ENGINE - Professional Fintech Theme Styles */
 html {
-    font-size: 24px;
+    font-size: 16px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-}
-
-@media (min-width: 1440px) {
-    html {
-        font-size: 26px;
-    }
-}
-
-@media (min-width: 1920px) {
-    html {
-        font-size: 28px;
-    }
 }
 
 body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 .glass {
