@@ -207,6 +207,11 @@ function saveUserSession(user) {
     try {
         localStorage.setItem('optigoal_user', JSON.stringify(user));
     } catch (e) {}
+    if (window.OptigoalDB && typeof window.OptigoalDB.syncUserAccount === 'function') {
+        window.OptigoalDB.syncUserAccount(user).catch(function(err) {
+            console.warn('[script.js] Account cloud sync notice:', err);
+        });
+    }
     updateUIForAuth();
 }
 

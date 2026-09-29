@@ -889,6 +889,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
+  <script src="js/firebase-db.js"></script>
   <script src="script.js"></script>
 
   <!-- Complete Financial & Goal Optimization Engine Script -->
@@ -948,7 +949,14 @@
           icon.className = 'material-symbols-outlined text-[20px] text-emerald-500';
         }
         text.textContent = message || 'Cloud Synced';
-      } else if (status === 'error') {
+      } else if (status === 'needs_setup') {
+        pill.className = 'flex items-center gap-2 px-4 py-2 rounded-full bg-sky-50 text-sm font-extrabold text-sky-700 border border-sky-200 shadow-sm transition-all';
+        if (icon) {
+          icon.textContent = 'cloud_sync';
+          icon.className = 'material-symbols-outlined text-[20px] text-sky-500';
+        }
+        text.textContent = message || 'Offline Cache (Needs Console Setup)';
+      } else if (status === 'error' || status === 'offline') {
         pill.className = 'flex items-center gap-2 px-4 py-2 rounded-full bg-rose-50 text-sm font-extrabold text-rose-700 border border-rose-200 shadow-sm transition-all';
         if (icon) {
           icon.textContent = 'cloud_off';
@@ -999,7 +1007,11 @@
       } catch (e) {}
 
       if (syncCloud) {
-        saveProfileToCloud(profile);
+        if (window.OptigoalDB && typeof window.OptigoalDB.saveFinancialProfile === 'function') {
+          window.OptigoalDB.saveFinancialProfile(profile);
+        } else {
+          saveProfileToCloud(profile);
+        }
       }
     }
 
@@ -1038,7 +1050,11 @@
       } catch (e) {}
 
       if (syncCloud) {
-        saveGoalsToCloud(goals);
+        if (window.OptigoalDB && typeof window.OptigoalDB.saveGoals === 'function') {
+          window.OptigoalDB.saveGoals(goals);
+        } else {
+          saveGoalsToCloud(goals);
+        }
       }
     }
 
@@ -1063,6 +1079,35 @@
 
     // Initialize Cloud Database Real-Time Synchronization
     function initCloudDatabaseSync() {
+      // 1. Check unified OptigoalDB service
+      if (window.OptigoalDB) {
+        window.OptigoalDB.onStatusChange((status, message) => {
+          updateCloudSyncStatus(status, message);
+        });
+
+        window.OptigoalDB.subscribeToUserData((cloudData) => {
+          let hasChanges = false;
+          if (cloudData.financialProfile || cloudData.profile) {
+            const remoteProfile = cloudData.financialProfile || cloudData.profile;
+            const localProfile = loadFinancialProfile();
+            if (JSON.stringify(localProfile) !== JSON.stringify(remoteProfile)) {
+              localStorage.setItem(getUserKey('optigoal_profile'), JSON.stringify(remoteProfile));
+              hasChanges = true;
+            }
+          }
+          if (Array.isArray(cloudData.goals)) {
+            const localGoals = loadGoals();
+            if (JSON.stringify(localGoals) !== JSON.stringify(cloudData.goals)) {
+              localStorage.setItem(getUserKey('optigoal_goals'), JSON.stringify(cloudData.goals));
+              hasChanges = true;
+            }
+          }
+          if (hasChanges) {
+            renderAll();
+          }
+        });
+        return;
+      }
       const db = getFirestoreDb();
       if (!db) {
         updateCloudSyncStatus('error', 'Local Storage Mode');
@@ -1927,6 +1972,17 @@
         `;
         chatHistory.insertAdjacentHTML('beforeend', aiResponseHtml);
         chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        // Persist AI Advisory session audit to Firebase Firestore
+        if (window.OptigoalDB && typeof window.OptigoalDB.saveAdvisoryAudit === 'function') {
+          window.OptigoalDB.saveAdvisoryAudit({
+            prompt: cleanPrompt,
+            model: model,
+            provider: providerName,
+            metrics: data.metrics,
+            advice: data.advice
+          });
+        }
 
         if (statusIndicator) statusIndicator.textContent = `Ready • ${providerName}`;
       } catch (err) {

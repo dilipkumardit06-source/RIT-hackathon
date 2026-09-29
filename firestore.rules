@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // =========================================================================
+    // OPTIGOAL ENGINE - CLOUD FIRESTORE SECURITY RULES
+    // Project: optigoal-engine-4905b
+    // =========================================================================
+
+    // Users Collection: Each user has private access to their own data
+    match /users/{userId} {
+      // Allow read and write if user is authenticated and matches the document ID
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Subcollections (e.g., /users/{userId}/audits/{auditId})
+      match /{allSubcollections=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // Public / Demo mode fallback rule (if unauthenticated demo testing is enabled)
+    // For immediate testing / development, you can temporarily uncomment the rule below:
+    // match /{document=**} {
+    //   allow read, write: if true;
+    // }
+  }
+}

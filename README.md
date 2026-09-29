@@ -75,21 +75,32 @@ python server.py
 ```
 Open **`http://localhost:8000`** in your browser.
 
+### 5. Firebase Cloud Database Setup (Optional / Recommended)
+Optigoal Engine uses **Firebase Cloud Firestore** for persistent multi-device syncing with offline-first support.
+To activate your Firestore database:
+1. Open [Firebase Console](https://console.firebase.google.com/project/optigoal-engine-4905b/firestore).
+2. Click **Create database** and choose your region (e.g. `asia-south1`).
+3. Deploy the included `firestore.rules` for production access control.
+4. Detailed instructions are available in [FIREBASE_DATABASE_SETUP.md](FIREBASE_DATABASE_SETUP.md).
+
 ---
 
 ## 📁 Repository Structure
 
 ```
 .
-├── dashboard.html          # Executive dashboard & AI Advisor interface
-├── index.html              # Landing page & 3D scroll animation
-├── login.html              # Authentication portal (Google & Email)
-├── server.py               # Backend server & OpenRouter AI integration
-├── styles.css              # Global design system & animations
-├── script.js               # Core animation & client logic
-├── enhanced_frames/        # 300-frame 3D sequence assets
+├── dashboard.html             # Executive dashboard & AI Advisor interface
+├── index.html                 # Landing page & 3D scroll animation
+├── login.html                 # Authentication portal (Google & Email)
+├── server.py                  # Backend server & OpenRouter AI integration
+├── styles.css                 # Global design system & animations
+├── script.js                  # Core animation & client logic
+├── firestore.rules            # Firebase Firestore security rules
+├── FIREBASE_DATABASE_SETUP.md # Firestore setup and schema documentation
+├── enhanced_frames/           # 300-frame 3D sequence assets
 └── js/
-    ├── firebase-config.js  # Firebase configuration
-    ├── intro-video.js      # Video controller
-    └── scroll-animation.js # Frame scrubbing engine
+    ├── firebase-config.js     # Firebase configuration
+    ├── firebase-db.js         # Unified Cloud Firestore database layer & offline cache
+    ├── intro-video.js         # Video controller
+    └── scroll-animation.js    # Frame scrubbing engine
 ```
