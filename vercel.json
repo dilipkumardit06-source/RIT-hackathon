@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/ai-advisor",
+      "destination": "/api/ai_advisor.py"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/ai_advisor.py"
+    }
+  ]
+}
