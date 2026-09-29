@@ -721,12 +721,48 @@
                 <p class="text-gray-700 text-base leading-relaxed">
                   Welcome! I am your <strong>Optigoal AI Strategic Advisor</strong> powered by OpenRouter. I utilize deterministic mathematical grounding in Indian Rupees (₹) to audit your finances, resolve budget bottlenecks, and verify goal feasibility without hallucination.
                 </p>
-                <div class="mt-4 pt-3 border-t border-purple-200/50 flex items-center gap-2 text-sm font-black text-purple-700">
-                  <span class="material-symbols-outlined text-[26px]">verified</span>
-                  <span>Click "Run Strategic Audit" above or ask any financial inquiry below.</span>
+                <div class="mt-4 pt-3 border-t border-purple-200/50 flex flex-wrap items-center gap-2 text-xs">
+                  <span class="font-black text-purple-800 mr-1">Tap to try:</span>
+                  <button type="button" onclick="askQuickPrompt('hi')" class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-purple-100 text-purple-700 font-extrabold border border-purple-200 transition-all flex items-center gap-1 cursor-pointer shadow-xs">
+                    👋 Say Hi
+                  </button>
+                  <button type="button" onclick="askQuickPrompt('Can I save ₹5,000 more each month?')" class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-purple-100 text-purple-700 font-extrabold border border-purple-200 transition-all flex items-center gap-1 cursor-pointer shadow-xs">
+                    💰 Can I save ₹5,000 more?
+                  </button>
+                  <button type="button" onclick="askQuickPrompt('What if my fixed expenses drop by 10%?')" class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-purple-100 text-purple-700 font-extrabold border border-purple-200 transition-all flex items-center gap-1 cursor-pointer shadow-xs">
+                    ⚡ What if expenses drop 10%?
+                  </button>
+                  <button type="button" onclick="runAiAdvisorAudit()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold transition-all flex items-center gap-1 cursor-pointer shadow-xs">
+                    🎯 Run Full Strategic Audit
+                  </button>
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Interactive Quick Prompt Bar -->
+          <div class="px-6 py-2.5 bg-gradient-to-r from-purple-50/70 to-indigo-50/70 border-t border-purple-100 flex items-center gap-2 overflow-x-auto text-xs font-bold text-gray-700">
+            <span class="text-purple-700 font-black flex items-center gap-1 shrink-0">
+              <span class="material-symbols-outlined text-[18px]">bolt</span> Quick Prompts:
+            </span>
+            <button type="button" onclick="askQuickPrompt('hi')" class="px-3 py-1 rounded-full bg-white hover:bg-purple-100 text-purple-700 border border-purple-200 shrink-0 transition-colors shadow-2xs cursor-pointer">
+              👋 Hi
+            </button>
+            <button type="button" onclick="askQuickPrompt('Can I save ₹5,000 more every month?')" class="px-3 py-1 rounded-full bg-white hover:bg-purple-100 text-purple-700 border border-purple-200 shrink-0 transition-colors shadow-2xs cursor-pointer">
+              💰 Save ₹5k More
+            </button>
+            <button type="button" onclick="askQuickPrompt('What if my fixed expenses drop by 10%?')" class="px-3 py-1 rounded-full bg-white hover:bg-purple-100 text-purple-700 border border-purple-200 shrink-0 transition-colors shadow-2xs cursor-pointer">
+              📉 Cut Overhead 10%
+            </button>
+            <button type="button" onclick="askQuickPrompt('Can I afford a goal of ₹5,00,000 in 2 years?')" class="px-3 py-1 rounded-full bg-white hover:bg-purple-100 text-purple-700 border border-purple-200 shrink-0 transition-colors shadow-2xs cursor-pointer">
+              🚗 ₹5L Goal Test
+            </button>
+            <button type="button" onclick="askQuickPrompt('How healthy is my emergency fund runway?')" class="px-3 py-1 rounded-full bg-white hover:bg-purple-100 text-purple-700 border border-purple-200 shrink-0 transition-colors shadow-2xs cursor-pointer">
+              🛡️ Emergency Runway
+            </button>
+            <button type="button" onclick="runAiAdvisorAudit()" class="px-3 py-1 rounded-full bg-purple-600 hover:bg-purple-500 text-white shrink-0 transition-colors shadow-2xs cursor-pointer font-black">
+              🎯 Run Full Audit
+            </button>
           </div>
 
           <!-- Message Input Bar -->
@@ -1948,8 +1984,26 @@
           updateAiAdvisorMetrics();
         }
 
-        const adviceHtml = renderAdvisorMarkdown(data.advice || 'No strategic advice generated.');
-        const providerName = data.provider || 'OpenRouter AI Engine';
+        const interactiveChipsHtml = `
+          <div class="mt-4 pt-3 border-t border-purple-100/80 flex flex-wrap items-center gap-2 text-xs">
+            <span class="text-purple-800 font-black flex items-center gap-1">Suggested:</span>
+            <button type="button" onclick="askQuickPrompt('Can I save ₹5,000 more every month?')" class="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold border border-purple-200 transition-all flex items-center gap-1 cursor-pointer shadow-2xs">
+              💰 Save ₹5k More
+            </button>
+            <button type="button" onclick="askQuickPrompt('What if my fixed expenses drop by 10%?')" class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold border border-blue-200 transition-all flex items-center gap-1 cursor-pointer shadow-2xs">
+              ⚡ Expenses Drop 10%
+            </button>
+            <button type="button" onclick="openFinancialProfileModal()" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold border border-emerald-200 transition-all flex items-center gap-1 cursor-pointer shadow-2xs">
+              ✏️ Edit Profile
+            </button>
+            <button type="button" onclick="openNewGoalModal()" class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold border border-amber-200 transition-all flex items-center gap-1 cursor-pointer shadow-2xs">
+              ➕ Add Goal
+            </button>
+            <button type="button" onclick="askQuickPrompt('How healthy is my emergency fund runway?')" class="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-700 font-bold border border-teal-200 transition-all flex items-center gap-1 cursor-pointer shadow-2xs">
+              🛡️ Emergency Runway
+            </button>
+          </div>
+        `;
 
         const aiResponseHtml = `
           <div class="flex items-start gap-4">
@@ -1967,6 +2021,7 @@
               <div class="text-gray-800 text-sm sm:text-base leading-relaxed pt-2">
                 ${adviceHtml}
               </div>
+              ${interactiveChipsHtml}
             </div>
           </div>
         `;
@@ -1986,7 +2041,7 @@
 
         if (statusIndicator) statusIndicator.textContent = `Ready • ${providerName}`;
       } catch (err) {
-        console.warn('AI Advisor API notice (using deterministic engine):', err);
+        console.warn('AI Advisor API notice (using conversational deterministic engine):', err);
         document.getElementById(loadingId)?.remove();
 
         // Client-Side Deterministic Mathematical Engine (Zero-Hallucination Fallback)
@@ -2002,36 +2057,71 @@
         const coverage = exp > 0 ? (res / exp).toFixed(1) : '0.0';
         const isFeasible = surplus >= 0;
 
-        let adviceText = `### 🎯 Strategic Financial Audit & AI Action Plan\n`;
-        adviceText += `*Powered by Optigoal Strategic Mathematical Engine | Currency: ₹ INR*\n\n`;
-        if (isFeasible) {
-          adviceText += `> ✅ **Status: FEASIBLE & RESILIENT**\n`;
-          adviceText += `> Your monthly disposable cash flow (**₹${disp.toLocaleString('en-IN')}**) comfortably funds your monthly goal requirements (**₹${Math.round(totalDemand).toLocaleString('en-IN')}**). You retain an unallocated monthly surplus of **₹${Math.round(surplus).toLocaleString('en-IN')}**.\n\n`;
-        } else {
-          adviceText += `> ⚠️ **Status: BUDGET DEFICIT DETECTED**\n`;
-          adviceText += `> Your total monthly goal demands (**₹${Math.round(totalDemand).toLocaleString('en-IN')}**) exceed your monthly disposable cash flow (**₹${disp.toLocaleString('en-IN')}**) by **₹${Math.round(Math.abs(surplus)).toLocaleString('en-IN')}/mo**.\n\n`;
-        }
+        const qLower = (cleanPrompt || '').toLowerCase().trim();
+        let adviceText = '';
 
-        adviceText += `#### 📊 1. Pre-Computed Mathematical Breakdown\n`;
-        adviceText += `- **Gross Monthly Inflow:** ₹${inc.toLocaleString('en-IN')}\n`;
-        adviceText += `- **Fixed Baseline Expenses:** ₹${exp.toLocaleString('en-IN')} (${(inc ? (exp/inc*100).toFixed(1) : 0)}% of income)\n`;
-        adviceText += `- **Active Investments:** ₹${inv.toLocaleString('en-IN')} (${(inc ? (inv/inc*100).toFixed(1) : 0)}% of income)\n`;
-        adviceText += `- **Net Available for Goals:** ₹${disp.toLocaleString('en-IN')}/month\n`;
-        adviceText += `- **Total Goal Demands:** ₹${Math.round(totalDemand).toLocaleString('en-IN')}/month across ${goals.length} active initiatives\n`;
-        adviceText += `- **Net Monthly Position:** **${surplus >= 0 ? '+' : ''}₹${Math.round(surplus).toLocaleString('en-IN')}**\n`;
-        adviceText += `- **Emergency Fund Runway:** ₹${res.toLocaleString('en-IN')} (${coverage} months of baseline expenses covered)\n\n`;
-
-        adviceText += `#### 💡 2. Executive Action Items\n`;
-        if (!isFeasible) {
-          adviceText += `1. **Timeline Smoothing:** Extend target timelines on Lower priority goals to reduce monthly demand within ₹${disp.toLocaleString('en-IN')}.\n`;
-          adviceText += `2. **Discretionary Trimming:** Free up ₹${Math.round(Math.abs(surplus)).toLocaleString('en-IN')}/month by reviewing non-essential baseline expenses.\n`;
-        } else {
-          adviceText += `1. **Surplus Deployment:** Direct your ₹${Math.round(surplus).toLocaleString('en-IN')}/month surplus toward accelerated goal funding or compounding equity.\n`;
-          if (Number(coverage) < 6.0) {
-            adviceText += `2. **Reserve Bolstering:** Prioritize building your emergency reserve to 6 months of expenses (₹${Math.round(exp * 6).toLocaleString('en-IN')}).\n`;
+        if (['hi', 'hello', 'hey', 'namaste', 'sup', 'good morning', 'good evening', 'who are you'].includes(qLower)) {
+          adviceText = `### 👋 Hello! I'm Optigoal AI, your Strategic Financial Advisor.\n\n` +
+            `I have analyzed your live financial profile:\n` +
+            `- 💰 **Monthly Inflow:** ₹${inc.toLocaleString('en-IN')}\n` +
+            `- 💳 **Net Disposable for Goals:** **₹${disp.toLocaleString('en-IN')}/month**\n` +
+            `- 🎯 **Active Goals Demand:** **₹${Math.round(totalDemand).toLocaleString('en-IN')}/month** (${goals.length} active initiative${goals.length !== 1 ? 's' : ''})\n` +
+            `- 🟢 **Net Monthly Position:** **${surplus >= 0 ? '+' : ''}₹${Math.round(surplus).toLocaleString('en-IN')}/mo** (${surplus >= 0 ? 'Surplus' : 'Deficit'})\n\n` +
+            `How can I help you optimize your finances today? You can ask me any question about your budget, or tap one of the suggested actions below!`;
+        } else if (qLower.includes('save') || qLower.includes('afford') || qLower.includes('can i')) {
+          const numbers = cleanPrompt.match(/\b\d{3,7}\b/g);
+          const target = numbers ? parseInt(numbers[0]) : 5000;
+          if (surplus >= target) {
+            adviceText = `### ✅ Yes, Absolutely! You can save an extra ₹${target.toLocaleString('en-IN')}/month.\n\n` +
+              `- **Current Monthly Surplus:** **₹${Math.round(surplus).toLocaleString('en-IN')}/month**\n` +
+              `- **Requested Extra Savings:** **₹${target.toLocaleString('en-IN')}/month**\n` +
+              `- **Remaining Cash Buffer:** **₹${Math.round(surplus - target).toLocaleString('en-IN')}/month**\n\n` +
+              `> **Strategic Recommendation:** Because your disposable cash flow is resilient, you can route this ₹${target.toLocaleString('en-IN')}/mo directly into a high-yield SIP or accelerate your highest priority goal without risking liquidity.`;
           } else {
-            adviceText += `2. **Capital Growth:** Your emergency runway is resilient (${coverage} months). Maximize long-term asset yields.\n`;
+            const gap = target - surplus;
+            const pct = exp > 0 ? (gap / exp * 100).toFixed(1) : 0;
+            adviceText = `### ⚠️ Close, but there is a small gap of ₹${Math.round(gap).toLocaleString('en-IN')}/month.\n\n` +
+              `- **Current Monthly Surplus:** **₹${Math.round(surplus).toLocaleString('en-IN')}/month**\n` +
+              `- **Target Savings Amount:** **₹${target.toLocaleString('en-IN')}/month**\n` +
+              `- **Monthly Funding Gap:** **₹${Math.round(gap).toLocaleString('en-IN')}/month**\n\n` +
+              `> **Action Plan:** You can unlock this extra ₹${target.toLocaleString('en-IN')}/mo by trimming just **${pct}%** from your current ₹${exp.toLocaleString('en-IN')} baseline expenses, or extending one of your lower-priority goal timelines by 3-6 months.`;
           }
+        } else if (qLower.includes('what if') || qLower.includes('cut') || qLower.includes('reduce') || qLower.includes('raise')) {
+          const savings10 = exp * 0.10;
+          adviceText = `### 💡 Interactive "What-If" Cash Flow Simulation\n\n` +
+            `- **Scenario: Reducing Fixed Overhead by 10%**\n` +
+            `- **Monthly Cash Saved:** **+₹${Math.round(savings10).toLocaleString('en-IN')}/month**\n` +
+            `- **New Disposable Cash Flow:** **₹${Math.round(disp + savings10).toLocaleString('en-IN')}/month**\n` +
+            `- **Boosted Monthly Surplus:** **₹${Math.round(surplus + savings10).toLocaleString('en-IN')}/month**\n\n` +
+            `> **Impact:** Trimming 10% of overhead expands your surplus by **₹${Math.round(savings10).toLocaleString('en-IN')}/mo**, cutting your goal completion timelines by an estimated 25%!`;
+        } else if (qLower.includes('emergency') || qLower.includes('runway') || qLower.includes('reserve')) {
+          adviceText = `### 🛡️ Emergency Reserve & Liquidity Analysis\n\n` +
+            `- **Current Emergency Reserve:** **₹${res.toLocaleString('en-IN')}**\n` +
+            `- **Monthly Fixed Overhead:** **₹${exp.toLocaleString('en-IN')}/mo**\n` +
+            `- **Current Runway Coverage:** **${coverage} months**\n` +
+            `- **Recommended Benchmark:** **6.0 months** (₹${Math.round(exp * 6).toLocaleString('en-IN')})\n\n` +
+            `> **Diagnosis:** ` + (Number(coverage) >= 6.0 ?
+              `Your liquidity is robust and exceeds safety thresholds! You can comfortably prioritize equity compounding.` :
+              `Your runway is currently under the 6-month safety threshold. Allocate ₹${Math.round(Math.min(surplus, (exp*6 - res)/6)).toLocaleString('en-IN')}/mo of your surplus into liquid funds to complete your safety net.`);
+        } else {
+          // Full audit
+          adviceText = `### 🎯 Strategic Financial Audit & AI Action Plan\n` +
+            `*Powered by Optigoal Strategic Mathematical Engine | Currency: ₹ INR*\n\n` +
+            (isFeasible ?
+              `> ✅ **Status: FEASIBLE & RESILIENT**\n> Your monthly disposable cash flow (**₹${disp.toLocaleString('en-IN')}**) comfortably funds your monthly goal requirements (**₹${Math.round(totalDemand).toLocaleString('en-IN')}**). You retain an unallocated monthly surplus of **₹${Math.round(surplus).toLocaleString('en-IN')}**.\n\n` :
+              `> ⚠️ **Status: BUDGET DEFICIT DETECTED**\n> Your total monthly goal demands (**₹${Math.round(totalDemand).toLocaleString('en-IN')}**) exceed your monthly disposable cash flow (**₹${disp.toLocaleString('en-IN')}**) by **₹${Math.round(Math.abs(surplus)).toLocaleString('en-IN')}/mo**.\n\n`) +
+            `#### 📊 1. Pre-Computed Mathematical Breakdown\n` +
+            `- **Gross Monthly Inflow:** ₹${inc.toLocaleString('en-IN')}\n` +
+            `- **Fixed Baseline Expenses:** ₹${exp.toLocaleString('en-IN')} (${(inc ? (exp/inc*100).toFixed(1) : 0)}% of income)\n` +
+            `- **Active Investments:** ₹${inv.toLocaleString('en-IN')} (${(inc ? (inv/inc*100).toFixed(1) : 0)}% of income)\n` +
+            `- **Net Available for Goals:** ₹${disp.toLocaleString('en-IN')}/month\n` +
+            `- **Total Goal Demands:** ₹${Math.round(totalDemand).toLocaleString('en-IN')}/month across ${goals.length} active initiatives\n` +
+            `- **Net Monthly Position:** **${surplus >= 0 ? '+' : ''}₹${Math.round(surplus).toLocaleString('en-IN')}**\n` +
+            `- **Emergency Fund Runway:** ₹${res.toLocaleString('en-IN')} (${coverage} months covered)\n\n` +
+            `#### 💡 2. Executive Action Items\n` +
+            (!isFeasible ?
+              `1. **Timeline Smoothing:** Extend target timelines on Lower priority goals to reduce monthly demand within ₹${disp.toLocaleString('en-IN')}.\n2. **Discretionary Trimming:** Free up ₹${Math.round(Math.abs(surplus)).toLocaleString('en-IN')}/month by reviewing non-essential baseline expenses.` :
+              `1. **Surplus Deployment:** Direct your ₹${Math.round(surplus).toLocaleString('en-IN')}/month surplus toward accelerated goal funding or compounding equity.\n2. **Reserve Bolstering:** Maintain a 6-month safety reserve of ₹${Math.round(exp * 6).toLocaleString('en-IN')}.`);
         }
 
         const adviceHtml = renderAdvisorMarkdown(adviceText);
@@ -2052,6 +2142,24 @@
               </div>
               <div class="text-gray-800 text-sm sm:text-base leading-relaxed pt-2">
                 ${adviceHtml}
+              </div>
+              <div class="mt-4 pt-3 border-t border-purple-100/80 flex flex-wrap items-center gap-2 text-xs">
+                <span class="text-purple-800 font-black flex items-center gap-1">Suggested:</span>
+                <button type="button" onclick="askQuickPrompt('Can I save ₹5,000 more every month?')" class="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold border border-purple-200 transition-all flex items-center gap-1 cursor-pointer shadow-2xs">
+                  💰 Save ₹5k More
+                </button>
+                <button type="button" onclick="askQuickPrompt('What if my fixed expenses drop by 10%?')" class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold border border-blue-200 transition-all flex items-center gap-1 cursor-pointer shadow-2xs">
+                  ⚡ Expenses Drop 10%
+                </button>
+                <button type="button" onclick="openFinancialProfileModal()" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold border border-emerald-200 transition-all flex items-center gap-1 cursor-pointer shadow-2xs">
+                  ✏️ Edit Profile
+                </button>
+                <button type="button" onclick="openNewGoalModal()" class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold border border-amber-200 transition-all flex items-center gap-1 cursor-pointer shadow-2xs">
+                  ➕ Add Goal
+                </button>
+                <button type="button" onclick="askQuickPrompt('How healthy is my emergency fund runway?')" class="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-700 font-bold border border-teal-200 transition-all flex items-center gap-1 cursor-pointer shadow-2xs">
+                  🛡️ Emergency Runway
+                </button>
               </div>
             </div>
           </div>

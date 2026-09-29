@@ -82,7 +82,7 @@ def compute_financial_metrics(profile, goals):
 # -------------------------------------------------------------
 # 2. OPENROUTER AI INVOCATION
 # -------------------------------------------------------------
-def call_openrouter(model_id, system_prompt, user_message, max_tokens=200):
+def call_openrouter(model_id, system_prompt, user_message, max_tokens=50):
     openrouter_key = os.environ.get('OPENROUTER_API_KEY', '').strip()
     if not openrouter_key:
         return None, "OPENROUTER_API_KEY not set"
@@ -95,9 +95,7 @@ def call_openrouter(model_id, system_prompt, user_message, max_tokens=200):
         "claude-opus-5": "openai/gpt-4o-mini",
         "gpt-4o-mini": "openai/gpt-4o-mini",
     }
-    actual_model = model_map.get(model_id, model_id.replace('openrouter/', ''))
-    if '/' not in actual_model:
-        actual_model = f"openai/{actual_model}"
+    actual_model = model_map.get(model_id, "openai/gpt-4o-mini")
 
     url = 'https://openrouter.ai/api/v1/chat/completions'
     headers = {
@@ -118,29 +116,29 @@ def call_openrouter(model_id, system_prompt, user_message, max_tokens=200):
 
     try:
         req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
-        with urllib.request.urlopen(req, timeout=20) as resp:
+        with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read().decode('utf-8'))
             choices = data.get('choices', [])
             if choices and 'message' in choices[0]:
                 content = choices[0]['message'].get('content', '')
                 if content:
-                    return content, actual_model
+                    return content.strip(), actual_model
     except urllib.error.HTTPError as e:
         err_body = e.read().decode('utf-8', errors='ignore')
         import re
         afford_match = re.search(r'can only afford (\d+)', err_body)
         if afford_match:
             afforded = int(afford_match.group(1))
-            adjusted_tokens = max(60, afforded - 10)
+            adjusted_tokens = max(25, afforded - 5)
             try:
                 payload['model'] = 'openai/gpt-4o-mini'
                 payload['max_tokens'] = adjusted_tokens
                 req_adj = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
-                with urllib.request.urlopen(req_adj, timeout=20) as resp_adj:
+                with urllib.request.urlopen(req_adj, timeout=15) as resp_adj:
                     data_adj = json.loads(resp_adj.read().decode('utf-8'))
                     choices_adj = data_adj.get('choices', [])
                     if choices_adj and 'message' in choices_adj[0]:
-                        return choices_adj[0]['message'].get('content', ''), 'openai/gpt-4o-mini'
+                        return choices_adj[0]['message'].get('content', '').strip(), 'openai/gpt-4o-mini'
             except Exception:
                 pass
     except Exception:
@@ -150,9 +148,10 @@ def call_openrouter(model_id, system_prompt, user_message, max_tokens=200):
 
 
 # -------------------------------------------------------------
-# 3. DETERMINISTIC HEURISTIC FALLBACK
+# 3. DYNAMIC CONVERSATIONAL & INTERACTIVE ADVISOR ENGINE
 # -------------------------------------------------------------
 def generate_heuristic_strategy(metrics, user_query):
+    import re
     curr = metrics['currency']
     inc = metrics['income']
     exp = metrics['expenses']
@@ -164,17 +163,85 @@ def generate_heuristic_strategy(metrics, user_query):
     feasibility = metrics['feasibility']
     goals = metrics['goal_breakdown']
 
+    clean_q = (user_query or '').strip().lower()
+
+    # 1. GREETING INTENT (e.g. "hi", "hello", "hey", "namaste")
+    if clean_q in ["hi", "hello", "hey", "namaste", "sup", "good morning", "good evening", "start", "who are you"]:
+        return (
+            f"### 👋 Hello! I'm Optigoal AI, your Strategic Financial Advisor.\n\n"
+            f"I have analyzed your live financial profile:\n"
+            f"- 💰 **Monthly Inflow:** {curr}{inc:,.2f}\n"
+            f"- 💳 **Net Disposable for Goals:** **{curr}{disp:,.2f}/month**\n"
+            f"- 🎯 **Active Goals Demand:** **{curr}{req:,.2f}/month** ({len(goals)} active initiative{'s' if len(goals) != 1 else ''})\n"
+            f"- 🟢 **Net Monthly Position:** **{'+' if surplus >= 0 else ''}{curr}{surplus:,.2f}/mo** ({'Surplus' if surplus >= 0 else 'Deficit'})\n\n"
+            f"How can I help you optimize your finances today? You can ask me anything about your cash flow, or tap one of the suggested actions below!"
+        )
+
+    # 2. SAVINGS OR AFFORDABILITY INTENT (e.g. "can I save 5000 more", "can I afford")
+    numbers = [int(n) for n in re.findall(r'\b\d{3,7}\b', clean_q)]
+    target_amount = numbers[0] if numbers else None
+
+    if any(k in clean_q for k in ["save", "afford", "can i", "extra", "spare"]) and target_amount:
+        if surplus >= target_amount:
+            buffer_rem = surplus - target_amount
+            return (
+                f"### ✅ Yes, Absolutely! You can save an extra {curr}{target_amount:,.2f}/month.\n\n"
+                f"- **Your Current Monthly Surplus:** **{curr}{surplus:,.2f}/month**\n"
+                f"- **Requested Extra Savings:** **{curr}{target_amount:,.2f}/month**\n"
+                f"- **Remaining Cash Buffer:** **{curr}{buffer_rem:,.2f}/month**\n\n"
+                f"> **Strategic Recommendation:** Because your disposable cash flow is resilient, you can route this {curr}{target_amount:,.2f}/mo directly into a high-yield SIP or accelerate your highest priority goal without risking liquidity."
+            )
+        else:
+            shortfall = target_amount - surplus
+            pct_trim = round((shortfall / exp * 100), 1) if exp > 0 else 0
+            return (
+                f"### ⚠️ Close, but there is a small gap of {curr}{shortfall:,.2f}/month.\n\n"
+                f"- **Your Current Monthly Surplus:** **{curr}{surplus:,.2f}/month**\n"
+                f"- **Target Savings Amount:** **{curr}{target_amount:,.2f}/month**\n"
+                f"- **Monthly Funding Gap:** **{curr}{shortfall:,.2f}/month**\n\n"
+                f"> **Action Plan to Bridge It:** You can easily unlock this extra {curr}{target_amount:,.2f}/mo by trimming just **{pct_trim}%** from your current {curr}{exp:,.2f} baseline fixed expenses, or extending one of your lower-priority goal timelines by 3-6 months."
+            )
+
+    # 3. WHAT-IF SCENARIO (e.g. "what if expenses drop", "cut expenses", "raise", "income")
+    if any(k in clean_q for k in ["what if", "cut", "reduce", "raise", "increase", "drop", "discount"]):
+        savings_10pct = exp * 0.10
+        new_surplus = surplus + savings_10pct
+        return (
+            f"### 💡 Interactive \"What-If\" Cash Flow Simulation\n\n"
+            f"- **Scenario: Reducing Fixed Overhead by 10%**\n"
+            f"- **Monthly Cash Saved:** **+{curr}{savings_10pct:,.2f}/month**\n"
+            f"- **New Disposable Cash Flow:** **{curr}{(disp + savings_10pct):,.2f}/month**\n"
+            f"- **Boosted Monthly Surplus:** **{curr}{new_surplus:,.2f}/month**\n\n"
+            f"> **Impact:** Trimming 10% of overhead expands your surplus by **{curr}{savings_10pct:,.2f}/mo**, cutting your goal completion timelines by an estimated 25%!"
+        )
+
+    # 4. EMERGENCY FUND INTENT
+    if any(k in clean_q for k in ["emergency", "runway", "safety", "reserve"]):
+        return (
+            f"### 🛡️ Emergency Reserve & Liquidity Analysis\n\n"
+            f"- **Current Emergency Reserve:** **{curr}{metrics['reserve']:,.2f}**\n"
+            f"- **Monthly Fixed Overhead:** **{curr}{exp:,.2f}/mo**\n"
+            f"- **Current Runway Coverage:** **{coverage} months**\n"
+            f"- **Recommended Benchmark:** **6.0 months** ({curr}{(exp * 6):,.2f})\n\n"
+            f"> **Diagnosis:** " + (
+                f"Your liquidity is robust and exceeds safety thresholds! You can comfortably prioritize equity compounding."
+                if coverage >= 6.0 else
+                f"Your runway is currently under the 6-month safety threshold. Allocate {curr}{min(surplus, (exp*6 - metrics['reserve'])/6):,.2f}/mo of your surplus into liquid funds to complete your safety net."
+            )
+        )
+
+    # 5. FULL STRATEGIC AUDIT INTENT OR DEFAULT
     lines = []
     lines.append(f"### 🎯 Strategic Financial Audit & AI Action Plan")
     lines.append(f"*Powered by Optigoal Strategic Mathematical Engine | Currency: {curr} INR*")
     lines.append("")
 
     if feasibility == "FEASIBLE":
-        lines.append(f"> ✅ **Status: FEASIBLE & HEALTHY**  ")
-        lines.append(f"> Your monthly disposable cash flow (**{curr}{disp:,.2f}**) comfortably covers your monthly goal requirements (**{curr}{req:,.2f}**). You have an unallocated surplus of **{curr}{surplus:,.2f}/month**.")
+        lines.append(f"> ✅ **Status: FEASIBLE & RESILIENT**  ")
+        lines.append(f"> Your monthly disposable cash flow (**{curr}{disp:,.2f}**) comfortably covers your monthly goal requirements (**{curr}{req:,.2f}**). You retain an unallocated monthly surplus of **{curr}{surplus:,.2f}**.")
     else:
         lines.append(f"> ⚠️ **Status: BUDGET DEFICIT DETECTED**  ")
-        lines.append(f"> Your total monthly goal requirements (**{curr}{req:,.2f}**) exceed your available monthly disposable cash flow (**{curr}{disp:,.2f}**) by **{curr}{abs(surplus):,.2f}/month**.")
+        lines.append(f"> Your total monthly goal requirements (**{curr}{req:,.2f}**) exceed your disposable cash flow (**{curr}{disp:,.2f}**) by **{curr}{abs(surplus):,.2f}/month**.")
 
     lines.append("")
     lines.append("#### 📊 1. Pre-Computed Mathematical Breakdown")
@@ -184,7 +251,7 @@ def generate_heuristic_strategy(metrics, user_query):
     lines.append(f"- **Net Available for Goals:** {curr}{disp:,.2f}/month")
     lines.append(f"- **Total Monthly Goal Demands:** {curr}{req:,.2f}/month across {len(goals)} active initiatives")
     lines.append(f"- **Net Monthly Cash Position:** **{'+' if surplus >= 0 else ''}{curr}{surplus:,.2f}**")
-    lines.append(f"- **Emergency Reserve Health:** {curr}{metrics['reserve']:,.2f} ({coverage:.1f} months of expenses covered; 6 months recommended)")
+    lines.append(f"- **Emergency Reserve Runway:** {curr}{metrics['reserve']:,.2f} ({coverage:.1f} months covered; 6 months recommended)")
 
     lines.append("")
     lines.append("#### 🎯 2. Strategic Goal Sequencing & Optimization")
@@ -195,17 +262,17 @@ def generate_heuristic_strategy(metrics, user_query):
             pct_disp = round((g['monthly_req'] / disp * 100), 1) if disp > 0 else 0
             lines.append(f"{idx}. **{g['name']}** [{g['category']} | {g['priority']} Priority]")
             lines.append(f"   - Target Capital: {curr}{g['target']:,.2f} in {g['months']} months")
-            lines.append(f"   - Monthly Allocation: {curr}{g['monthly_req']:,.2f}/mo ({pct_disp}% of disposable income)")
+            lines.append(f"   - Monthly Demand: {curr}{g['monthly_req']:,.2f}/mo ({pct_disp}% of disposable income)")
 
     lines.append("")
     lines.append("#### 💡 3. Executive Action Items")
     if feasibility == "DEFICIT":
-        lines.append(f"1. **Cash Flow Re-Balancing:** Reclaim {curr}{abs(surplus):,.2f}/mo by trimming discretionary baseline spending or temporarily reducing non-retirement investment contributions.")
-        lines.append(f"2. **Timeline Smoothing:** Extend goal timelines on Medium/Low priority initiatives to reduce aggregate monthly demand to {curr}{disp:,.2f}/mo.")
+        lines.append(f"1. **Cash Flow Re-Balancing:** Reclaim {curr}{abs(surplus):,.2f}/mo by trimming discretionary baseline spending.")
+        lines.append("2. **Extend Goal Horizons:** Extend timelines on Medium and Low priority goals to eliminate monthly conflict.")
     else:
-        lines.append(f"1. **Surplus Deployment:** Direct your {curr}{surplus:,.2f}/mo surplus into high-yield instruments or accelerate your highest priority goal.")
+        lines.append(f"1. **Surplus Deployment:** Direct your {curr}{surplus:,.2f}/mo surplus into high-yield compounding instruments.")
         if coverage < 6.0:
-            lines.append(f"2. **Reserve Bolstering:** Allocate a portion of your monthly surplus to reach the 6-month safety threshold of {curr}{(exp*6):,.2f}.")
+            lines.append(f"2. **Bolster Liquidity Runway:** Add to your emergency reserve over the next 6-12 months.")
         else:
             lines.append(f"2. **Capital Growth:** Your emergency fund is fully capitalized ({coverage:.1f} months). Prioritize equity compounding.")
 
